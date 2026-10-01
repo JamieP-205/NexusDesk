@@ -2,7 +2,6 @@ package dev.jamie.nexusdesk.service;
 
 import dev.jamie.nexusdesk.model.*;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.*;
 import org.springframework.jdbc.core.DataClassRowMapper;
@@ -64,7 +63,7 @@ public class TicketService {
         var key = new GeneratedKeyHolder();
         db.update(connection -> {
             PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO tickets(title,description,category,priority,creator_id) VALUES (?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+                    "INSERT INTO tickets(title,description,category,priority,creator_id) VALUES (?,?,?,?,?)", new String[]{"id"});
             statement.setString(1, cleanTitle); statement.setString(2, cleanDescription);
             statement.setString(3, category); statement.setString(4, priority); statement.setLong(5, actor.id());
             return statement;

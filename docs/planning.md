@@ -36,3 +36,7 @@ I checked these sources on 1 October 2026:
 ## Build provenance
 
 I asked Codex to implement this initial version from my brief, including substantial code, tests and documentation. These notes describe decisions made during that assisted build. I still need to work through the code myself before describing it as something I can build independently. I’m not spreading commits over invented dates or adding made-up debugging stories.
+
+## First implementation checkpoint
+
+The first test run reached H2 and applied the migration, but Mockito's default inline mock maker could not attach an agent in the build environment. These integration tests use real services and a real database, so I switched the test mock maker to the subclass implementation rather than adding instrumentation just to start the tests.
