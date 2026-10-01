@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Sign in')}"></head>
+<body class="login-page"><main class="login-shell">
+  <section class="login-intro"><a class="brand" href="/">NexusDesk<span class="brand-dot">.</span></a>
+    <p class="eyebrow">NORTHSTAR DIGITAL SOLUTIONS</p><h1>A clearer desk.<br>A shorter queue.</h1><p>Support requests and company equipment, together in one place.</p>
+    <div class="login-note">IT SUPPORT &amp; EQUIPMENT MANAGEMENT<span>01 / NEXUSDESK</span></div>
+  </section>
+  <section class="login-form"><p class="eyebrow">YOUR WORKSPACE</p><h2>Welcome back</h2><p class="muted">Sign in with your work account.</p>
+    <p th:if="${param.error}" class="error-note" role="alert">The email or password wasn't recognised.</p>
+    <p th:if="${param.logout}" class="notice">You're signed out.</p>
+    <p th:if="${param.expired}" class="notice">Your account changed or your session ended. Please sign in again.</p>
+    <form th:action="@{/login}" method="post">
+      <label>Email address<input name="username" type="email" autocomplete="username" required maxlength="160" placeholder="you@northstar.example"></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label>
+      <button class="primary full" type="submit">Sign in <span>→</span></button>
+    </form><p class="small muted">Need an account? Ask your IT administrator.</p>
+  </section>
+</main></body></html>

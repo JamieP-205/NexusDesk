@@ -1,0 +1,19 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Ticket ' + ${ticket.id})}"></head><body><aside th:replace="~{fragments :: nav('tickets')}"></aside><main class="main">
+<div class="topline"><a href="/tickets">← Support tickets</a><span th:text="${'ND-' + ticket.id}"></span></div>
+<header class="page-header"><div><p class="eyebrow" th:text="${ticket.category + ' / ' + ticket.creatorName}"></p><h1 class="detail-title" th:text="${ticket.title}"></h1><p class="muted">Created <span th:text="${#temporals.format(ticket.createdAt,'dd MMM yyyy, HH:mm')}"></span></p></div><span class="badge large" th:text="${ticket.status}"></span></header>
+<div th:replace="~{fragments :: notice}"></div>
+<div class="detail-grid"><div class="stack"><section class="panel padded"><h2>The problem</h2><p class="preserve" th:text="${ticket.description}"></p><div th:if="${ticket.resolution}" class="resolution"><h3>Resolution</h3><p class="preserve" th:text="${ticket.resolution}"></p></div></section>
+<section class="panel padded"><h2>Conversation</h2><p class="muted" th:if="${#lists.isEmpty(comments)}">No comments yet.</p>
+<article class="comment" th:each="c : ${comments}"><div class="section-heading"><strong th:text="${c.name}"></strong><time class="small muted" th:text="${#temporals.format(c.createdAt,'dd MMM, HH:mm')}"></time></div><p class="preserve" th:text="${c.body}"></p></article>
+<form th:if="${ticket.status != 'Closed'}" th:action="@{/tickets/{id}/comments(id=${ticket.id})}" method="post"><label>Add a comment<textarea name="body" required maxlength="3000" rows="4" placeholder="Add an update or ask a question…"></textarea></label><button type="submit">Post comment</button></form><p class="muted" th:if="${ticket.status == 'Closed'}">This ticket is closed. IT can reopen it if the problem returns.</p></section>
+<section class="panel padded"><h2>Ticket history</h2><ol class="timeline"><li th:each="h : ${history}"><strong th:text="${h.body}"></strong><small><span th:text="${h.name}"></span> · <span th:text="${#temporals.format(h.createdAt,'dd MMM yyyy, HH:mm')}"></span></small></li></ol></section></div>
+<aside class="stack"><section class="panel padded"><h2>Ticket details</h2><dl><dt>Priority</dt><dd th:text="${ticket.priority}"></dd><dt>Assigned technician</dt><dd th:text="${ticket.assigneeName ?: 'Unassigned'}"></dd></dl>
+<div class="related-links" th:if="${me.isStaff()}"><a th:href="@{/assets(owner=${ticket.creatorId})}">View this person's equipment →</a><a th:href="@{/tickets(creator=${ticket.creatorId})}">View their ticket history →</a></div></section>
+<section class="panel padded" th:if="${me.isStaff()}"><h2>Update ticket</h2><form th:action="@{/tickets/{id}(id=${ticket.id})}" method="post"><input type="hidden" name="version" th:value="${ticket.version}">
+<label>Status<select name="status"><option th:each="s : ${nextStatuses}" th:value="${s}" th:text="${s}" th:selected="${s == ticket.status}"></option></select></label>
+<label>Priority<select name="priority"><option th:each="p : ${priorities}" th:text="${p}" th:selected="${p == ticket.priority}"></option></select></label>
+<label>Technician<select name="assignee"><option value="">Unassigned</option><option th:each="p : ${technicians}" th:value="${p.id}" th:text="${p.name}" th:selected="${p.id == ticket.assigneeId}"></option></select></label>
+<p class="help">Choose Assigned and a technician to pick up an open ticket. Reopening clears the assignment.</p>
+<label>Resolution<textarea name="resolution" maxlength="3000" rows="4" th:text="${ticket.resolution}" placeholder="Required to resolve or close"></textarea></label><button class="primary full" type="submit">Save changes</button></form></section></aside></div>
+</main></body></html>

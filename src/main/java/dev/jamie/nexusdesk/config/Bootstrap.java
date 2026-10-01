@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
+@org.springframework.core.annotation.Order(0)
 public class Bootstrap implements ApplicationRunner {
     private final UserService users;
     private final JdbcTemplate db;
