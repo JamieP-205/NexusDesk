@@ -59,6 +59,7 @@ public class AssetService {
         lock(id);
         Asset asset = get(actor, id);
         if (!asset.status().equals("Available") || asset.ownerId() != null) throw Problem.invalid("Only available assets can be assigned.");
+        db.queryForList("SELECT id FROM users WHERE id=? FOR UPDATE", owner);
         Account person = users.find(owner);
         if (!person.enabled()) throw Problem.invalid("Choose an enabled user.");
         db.update("INSERT INTO asset_assignments(asset_id,user_id,assigned_by) VALUES (?,?,?)", id, owner, actor.id());

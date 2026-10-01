@@ -69,6 +69,7 @@ class TicketServiceTest {
         assertThat(tickets.get(admin, id).resolvedAt()).isNull();
         assertThat(tickets.get(admin, id).assigneeId()).isNull();
         assertThat(tickets.history(admin, id).size()).isGreaterThan(5);
+        assertThat(tickets.history(admin, id)).anyMatch(a -> a.body().contains("Replaced driver"));
     }
     @Test void staleSaveDoesNotOverwriteNewWork() {
         long id = create();

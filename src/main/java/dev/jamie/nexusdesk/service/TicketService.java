@@ -82,6 +82,7 @@ public class TicketService {
         if (status.equals("Open")) assignee = null;
         if (!status.equals("Open") && assignee == null) throw Problem.invalid("Choose a technician before moving this ticket forward.");
         if (assignee != null) {
+            db.queryForList("SELECT id FROM users WHERE id=? FOR UPDATE", assignee);
             Account assigned = users.find(assignee);
             if (!assigned.enabled() || !assigned.isStaff()) throw Problem.invalid("Choose an active technician.");
         }
@@ -97,10 +98,11 @@ public class TicketService {
         if (!old.priority().equals(priority)) history(id, actor, "Priority: " + old.priority() + " → " + priority);
         if (!Objects.equals(old.assigneeId(), assignee)) history(id, actor, "Assigned technician: " +
                 (old.assigneeName() == null ? "Unassigned" : old.assigneeName()) + " → " + (assignee == null ? "Unassigned" : users.find(assignee).name()));
-        if (!Objects.equals(old.resolution(), cleanResolution) && cleanResolution != null) history(id, actor, "Saved resolution notes");
+        if (!Objects.equals(old.resolution(), cleanResolution) && cleanResolution != null) db.update("INSERT INTO ticket_history(ticket_id,actor_id,event,details) VALUES (?,?,?,?)", id, actor.id(), "Saved resolution notes", cleanResolution);
     }
     @Transactional
     public void comment(Account actor, long id, String body) {
+        db.queryForList("SELECT id FROM tickets WHERE id=? FOR UPDATE", id);
         Ticket ticket = get(actor, id);
         if (ticket.status().equals("Closed")) throw Problem.invalid("Reopen this ticket before adding a comment.");
         db.update("INSERT INTO comments(ticket_id,author_id,body) VALUES (?,?,?)", id, actor.id(), Rules.text(body, "Comment", 3000));
@@ -114,7 +116,7 @@ public class TicketService {
     }
     public List<Activity> history(Account actor, long id) {
         get(actor, id);
-        return db.query("SELECT h.id,u.name,h.event AS body,h.created_at FROM ticket_history h JOIN users u ON h.actor_id=u.id WHERE h.ticket_id=? ORDER BY h.id DESC",
+        return db.query("SELECT h.id,u.name,CONCAT(h.event, CASE WHEN h.details IS NULL THEN '' ELSE CONCAT(CHAR(10), h.details) END) AS body,h.created_at FROM ticket_history h JOIN users u ON h.actor_id=u.id WHERE h.ticket_id=? ORDER BY h.id DESC",
                 new DataClassRowMapper<>(Activity.class), id);
     }
     private void history(long id, Account actor, String event) {
