@@ -32,3 +32,7 @@ I checked these sources on 1 October 2026:
 - [Spring Security CSRF](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html): keep protection enabled on state-changing forms.
 - [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html): salted adaptive hashes. I chose PBKDF2-HMAC-SHA256 with 600,000 iterations because Spring supports it without another crypto dependency. Argon2id is OWASP’s first choice; this is a documented trade-off, not a claim that PBKDF2 is better.
 - [H2 features](https://h2database.com/html/features.html): embedded file storage and transactions. A PostgreSQL move needs separate migration and concurrency testing.
+
+## First implementation checkpoint
+
+The first test run reached H2 and applied the migration, but Mockito's default inline mock maker could not attach an agent in the build environment. These integration tests use real services and a real database, so I switched the test mock maker to the subclass implementation rather than adding instrumentation just to start the tests.
