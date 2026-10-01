@@ -56,6 +56,7 @@ public class UserService {
         Rules.choice(role, List.of("EMPLOYEE", "TECHNICIAN", "ADMIN"), "role");
         // I lock the admin group so two requests can't remove the last admin at the same time.
         db.queryForList("SELECT id FROM users WHERE role = 'ADMIN' ORDER BY id FOR UPDATE");
+        db.queryForList("SELECT id FROM users WHERE id=? FOR UPDATE", id);
         Account old = find(id);
         if (id == actor.id() && (!enabled || !role.equals("ADMIN"))) {
             throw Problem.invalid("I can't disable or demote the account currently in use.");
