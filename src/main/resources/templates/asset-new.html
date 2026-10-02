@@ -1,3 +1,47 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments :: head('Add equipment')}"></head><body><aside th:replace="~{fragments :: nav('assets')}"></aside><main class="main"><div class="topline"><a href="/assets">← Equipment</a></div><header class="page-header"><div><p class="eyebrow">ASSET REGISTER</p><h1>Add equipment</h1><p class="muted">New equipment starts as available. Assign it from its details page.</p></div></header>
-<form class="panel form-panel" th:action="@{/assets}" method="post"><div class="form-grid"><label>Type<select name="type"><option th:each="t : ${assetTypes}" th:text="${t}"></option></select></label><label>Manufacturer<input name="manufacturer" required maxlength="80"></label><label>Model<input name="model" required maxlength="100"></label><label>Serial number<input name="serial" required maxlength="100"></label><label>Purchase date<input type="date" name="purchaseDate" required></label></div><div class="actions"><button class="primary" type="submit">Add equipment</button><a href="/assets">Cancel</a></div></form></main></body></html>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments :: head('Add equipment')}"></head>
+  <body>
+    <aside th:replace="~{fragments :: nav('assets')}"></aside>
+    <main class="main">
+      <div class="topline"><a href="/assets">← Equipment</a></div>
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">ASSET REGISTER</p>
+          <h1>Add equipment</h1>
+          <p class="muted">
+            New equipment starts as available. Assign it from its details page.
+          </p>
+        </div>
+      </header>
+      <form class="panel form-panel" th:action="@{/assets}" method="post">
+        <div class="form-grid">
+          <label
+            >Type<select name="type">
+              <option
+                th:each="t : ${assetTypes}"
+                th:text="${t}"
+              ></option></select></label
+          ><label
+            >Manufacturer<input
+              name="manufacturer"
+              required
+              maxlength="80" /></label
+          ><label>Model<input name="model" required maxlength="100" /></label
+          ><label
+            >Serial number<input
+              name="serial"
+              required
+              maxlength="100" /></label
+          ><label
+            >Purchase date<input type="date" name="purchaseDate" required
+          /></label>
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Add equipment</button
+          ><a href="/assets">Cancel</a>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>

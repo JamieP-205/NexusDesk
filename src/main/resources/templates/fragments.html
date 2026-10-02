@@ -1,36 +1,107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:fragment="head(title)">
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title th:text="${title + ' · NexusDesk'}">NexusDesk</title>
-  <link rel="stylesheet" th:href="@{/style.css}">
-</head>
-<body>
-<aside class="sidebar" th:fragment="nav(active)">
-  <a class="brand" href="/" aria-label="NexusDesk home"><span class="brand-mark">N</span>NexusDesk<span class="brand-dot">.</span></a>
-  <p class="workspace-label">NORTHSTAR / IT WORKSPACE</p>
-  <nav aria-label="Main navigation">
-    <a th:if="${me.isStaff()}" href="/" th:classappend="${active == 'dashboard'} ? 'selected'">Overview <span>↗</span></a>
-    <a href="/tickets" th:classappend="${active == 'tickets'} ? 'selected'">Support tickets <span>≡</span></a>
-    <a href="/assets" th:classappend="${active == 'assets'} ? 'selected'">Equipment <span>▤</span></a>
-    <a th:if="${me.isAdmin()}" href="/users" th:classappend="${active == 'users'} ? 'selected'">People <span>○</span></a>
-  </nav>
-  <div class="sidebar-bottom"><div class="avatar" th:text="${#strings.substring(me.name,0,1)}">J</div>
-    <div><strong th:text="${me.name}">Name</strong><small th:text="${me.role}">Role</small></div>
-    <form th:action="@{/logout}" method="post"><button class="text-button" type="submit">Sign out</button></form>
-  </div>
-</aside>
-<div th:fragment="notice" th:if="${success}" class="notice" role="status" th:text="${success}"></div>
-<div class="table-wrap" th:fragment="ticketTable(rows)">
-  <table><thead><tr><th>Ticket</th><th>Priority</th><th>Status</th><th>Assigned to</th><th>Updated</th></tr></thead>
-    <tbody><tr th:each="t : ${rows}">
-      <td><a class="ticket-link" th:href="@{/tickets/{id}(id=${t.id})}" th:text="${t.title}"></a><small><span th:text="${'ND-' + t.id}"></span> · <span th:text="${t.creatorName}"></span></small></td>
-      <td><span class="priority" th:classappend="${#strings.toLowerCase(t.priority)}" th:text="${t.priority}"></span></td>
-      <td><span class="badge" th:classappend="${t.finished} ? 'done'" th:text="${t.status}"></span></td>
-      <td th:text="${t.assigneeName ?: 'Unassigned'}"></td>
-      <td class="muted" th:text="${#temporals.format(t.updatedAt,'dd MMM, HH:mm')}"></td>
-    </tr></tbody>
-  </table>
-  <div class="empty" th:if="${#lists.isEmpty(rows)}"><h3>No tickets here yet</h3><p>Create a ticket or try a different filter.</p></div>
-</div>
-</body></html>
+  <head th:fragment="head(title)">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title th:text="${title + ' · NexusDesk'}">NexusDesk</title>
+    <link rel="stylesheet" th:href="@{/style.css}" />
+  </head>
+  <body>
+    <aside class="sidebar" th:fragment="nav(active)">
+      <a class="brand" href="/" aria-label="NexusDesk home"
+        ><span class="brand-mark">N</span>NexusDesk<span class="brand-dot"
+          >.</span
+        ></a
+      >
+      <p class="workspace-label">NORTHSTAR / IT WORKSPACE</p>
+      <nav aria-label="Main navigation">
+        <a
+          th:if="${me.isStaff()}"
+          href="/"
+          th:classappend="${active == 'dashboard'} ? 'selected'"
+          >Overview <span>↗</span></a
+        >
+        <a href="/tickets" th:classappend="${active == 'tickets'} ? 'selected'"
+          >Support tickets <span>≡</span></a
+        >
+        <a href="/assets" th:classappend="${active == 'assets'} ? 'selected'"
+          >Equipment <span>▤</span></a
+        >
+        <a
+          th:if="${me.isAdmin()}"
+          href="/users"
+          th:classappend="${active == 'users'} ? 'selected'"
+          >People <span>○</span></a
+        >
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="avatar" th:text="${#strings.substring(me.name,0,1)}">J</div>
+        <div>
+          <strong th:text="${me.name}">Name</strong
+          ><small th:text="${me.role}">Role</small>
+        </div>
+        <form th:action="@{/logout}" method="post">
+          <button class="text-button" type="submit">Sign out</button>
+        </form>
+      </div>
+    </aside>
+    <div
+      th:fragment="notice"
+      th:if="${success}"
+      class="notice"
+      role="status"
+      th:text="${success}"
+    ></div>
+    <div class="table-wrap" th:fragment="ticketTable(rows)">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticket</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Assigned to</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="t : ${rows}">
+            <td>
+              <a
+                class="ticket-link"
+                th:href="@{/tickets/{id}(id=${t.id})}"
+                th:text="${t.title}"
+              ></a
+              ><small
+                ><span th:text="${'ND-' + t.id}"></span> ·
+                <span th:text="${t.creatorName}"></span
+              ></small>
+            </td>
+            <td>
+              <span
+                class="priority"
+                th:classappend="${#strings.toLowerCase(t.priority)}"
+                th:text="${t.priority}"
+              ></span>
+            </td>
+            <td>
+              <span
+                class="badge"
+                th:classappend="${t.finished} ? 'done'"
+                th:text="${t.status}"
+              ></span>
+            </td>
+            <td th:text="${t.assigneeName ?: 'Unassigned'}"></td>
+            <td
+              class="muted"
+              th:text="${#temporals.format(t.updatedAt,'dd MMM, HH:mm')}"
+            ></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty" th:if="${#lists.isEmpty(rows)}">
+        <h3>No tickets here yet</h3>
+        <p>Create a ticket or try a different filter.</p>
+      </div>
+    </div>
+  </body>
+</html>

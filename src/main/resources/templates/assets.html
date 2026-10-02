@@ -1,7 +1,91 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments :: head('Equipment')}"></head><body><aside th:replace="~{fragments :: nav('assets')}"></aside><main class="main">
-<div class="topline"><span>WORKSPACE / EQUIPMENT</span></div><header class="page-header"><div><p class="eyebrow">ASSET REGISTER</p><h1 th:text="${me.isStaff() ? 'Equipment' : 'My equipment'}"></h1><p class="muted">Know what's available, who's using it and where it's been.</p></div><a th:if="${me.isAdmin()}" class="button primary" href="/assets/new">+ Add equipment</a></header>
-<div th:replace="~{fragments :: notice}"></div>
-<form class="panel inline-filter" action="/assets" method="get" th:if="${me.isStaff()}"><label>Assigned to<select name="owner"><option value="">Everyone</option><option th:each="p : ${people}" th:value="${p.id}" th:text="${p.name}" th:selected="${p.id == owner}"></option></select></label><button type="submit">Filter equipment</button><a href="/assets">Clear</a></form>
-<section class="panel"><div class="section-heading"><h2>Equipment register</h2><span class="badge" th:text="${#lists.size(assets) + ' assets'}"></span></div><div class="table-wrap"><table><thead><tr><th>Equipment</th><th>Serial number</th><th>Status</th><th>Assigned to</th><th>Purchased</th></tr></thead><tbody><tr th:each="a : ${assets}"><td><a class="ticket-link" th:href="@{/assets/{id}(id=${a.id})}" th:text="${a.manufacturer + ' ' + a.model}"></a><small th:text="${'AS-' + a.id + ' · ' + a.type}"></small></td><td class="mono" th:text="${a.serialNumber}"></td><td><span class="badge" th:classappend="${a.status == 'Available'} ? 'done'" th:text="${a.status}"></span></td><td th:text="${a.ownerName ?: 'Unassigned'}"></td><td th:text="${a.purchaseDate}"></td></tr></tbody></table></div><div class="empty" th:if="${#lists.isEmpty(assets)}"><h3>No equipment here yet</h3><p th:text="${me.isAdmin() ? 'Add the first device to start the register.' : 'Equipment will appear here once it is assigned.'}"></p></div></section>
-</main></body></html>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments :: head('Equipment')}"></head>
+  <body>
+    <aside th:replace="~{fragments :: nav('assets')}"></aside>
+    <main class="main">
+      <div class="topline"><span>WORKSPACE / EQUIPMENT</span></div>
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">ASSET REGISTER</p>
+          <h1 th:text="${me.isStaff() ? 'Equipment' : 'My equipment'}"></h1>
+          <p class="muted">
+            Know what's available, who's using it and where it's been.
+          </p>
+        </div>
+        <a th:if="${me.isAdmin()}" class="button primary" href="/assets/new"
+          >+ Add equipment</a
+        >
+      </header>
+      <div th:replace="~{fragments :: notice}"></div>
+      <form
+        class="panel inline-filter"
+        action="/assets"
+        method="get"
+        th:if="${me.isStaff()}"
+      >
+        <label
+          >Assigned to<select name="owner">
+            <option value="">Everyone</option>
+            <option
+              th:each="p : ${people}"
+              th:value="${p.id}"
+              th:text="${p.name}"
+              th:selected="${p.id == owner}"
+            ></option></select></label
+        ><button type="submit">Filter equipment</button
+        ><a href="/assets">Clear</a>
+      </form>
+      <section class="panel">
+        <div class="section-heading">
+          <h2>Equipment register</h2>
+          <span
+            class="badge"
+            th:text="${#lists.size(assets) + ' assets'}"
+          ></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Equipment</th>
+                <th>Serial number</th>
+                <th>Status</th>
+                <th>Assigned to</th>
+                <th>Purchased</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="a : ${assets}">
+                <td>
+                  <a
+                    class="ticket-link"
+                    th:href="@{/assets/{id}(id=${a.id})}"
+                    th:text="${a.manufacturer + ' ' + a.model}"
+                  ></a
+                  ><small th:text="${'AS-' + a.id + ' · ' + a.type}"></small>
+                </td>
+                <td class="mono" th:text="${a.serialNumber}"></td>
+                <td>
+                  <span
+                    class="badge"
+                    th:classappend="${a.status == 'Available'} ? 'done'"
+                    th:text="${a.status}"
+                  ></span>
+                </td>
+                <td th:text="${a.ownerName ?: 'Unassigned'}"></td>
+                <td th:text="${a.purchaseDate}"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="empty" th:if="${#lists.isEmpty(assets)}">
+          <h3>No equipment here yet</h3>
+          <p
+            th:text="${me.isAdmin() ? 'Add the first device to start the register.' : 'Equipment will appear here once it is assigned.'}"
+          ></p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
