@@ -1,10 +1,65 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments :: head('New ticket')}"></head><body><aside th:replace="~{fragments :: nav('tickets')}"></aside><main class="main">
-<div class="topline"><a href="/tickets">← Support tickets</a></div><header class="page-header"><div><p class="eyebrow">NEW REQUEST</p><h1>What needs a hand?</h1><p class="muted">A few details now can save a lot of back and forth.</p></div></header>
-<form class="panel form-panel" th:action="@{/tickets}" method="post">
-<label>Title<input name="title" required maxlength="140" placeholder="e.g. Laptop keeps losing Wi-Fi"></label>
-<div class="form-grid"><label>Category<select name="category" required><option th:each="c : ${categories}" th:text="${c}"></option></select></label>
-<label>Priority<select name="priority" required><option th:each="p : ${priorities}" th:text="${p}" th:selected="${p == 'Medium'}"></option></select></label></div>
-<p class="help">Critical means work has stopped for multiple people. High means you cannot do an important task.</p>
-<label>What happened?<textarea name="description" required maxlength="6000" rows="8" placeholder="What were you trying to do? Include any error message and what you've already tried."></textarea></label>
-<p class="help">Don't include passwords or other sensitive information.</p><div class="actions"><button class="primary" type="submit">Create ticket</button><a href="/tickets">Cancel</a></div></form></main></body></html>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments :: head('New ticket')}"></head>
+  <body>
+    <aside th:replace="~{fragments :: nav('tickets')}"></aside>
+    <main class="main">
+      <div class="topline"><a href="/tickets">← Support tickets</a></div>
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">NEW REQUEST</p>
+          <h1>What needs a hand?</h1>
+          <p class="muted">
+            A few details now can save a lot of back and forth.
+          </p>
+        </div>
+      </header>
+      <form class="panel form-panel" th:action="@{/tickets}" method="post">
+        <label
+          >Title<input
+            name="title"
+            required
+            maxlength="140"
+            placeholder="e.g. Laptop keeps losing Wi-Fi"
+        /></label>
+        <div class="form-grid">
+          <label
+            >Category<select name="category" required>
+              <option
+                th:each="c : ${categories}"
+                th:text="${c}"
+              ></option></select
+          ></label>
+          <label
+            >Priority<select name="priority" required>
+              <option
+                th:each="p : ${priorities}"
+                th:text="${p}"
+                th:selected="${p == 'Medium'}"
+              ></option></select
+          ></label>
+        </div>
+        <p class="help">
+          Critical means work has stopped for multiple people. High means you
+          cannot do an important task.
+        </p>
+        <label
+          >What happened?<textarea
+            name="description"
+            required
+            maxlength="6000"
+            rows="8"
+            placeholder="What were you trying to do? Include any error message and what you've already tried."
+          ></textarea>
+        </label>
+        <p class="help">
+          Don't include passwords or other sensitive information.
+        </p>
+        <div class="actions">
+          <button class="primary" type="submit">Create ticket</button
+          ><a href="/tickets">Cancel</a>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>

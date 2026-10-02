@@ -1,9 +1,144 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments :: head('Equipment details')}"></head><body><aside th:replace="~{fragments :: nav('assets')}"></aside><main class="main"><div class="topline"><a href="/assets">← Equipment</a><span th:text="${'AS-' + asset.id}"></span></div><header class="page-header"><div><p class="eyebrow" th:text="${asset.type}"></p><h1 class="detail-title" th:text="${asset.manufacturer + ' ' + asset.model}"></h1><p class="muted mono" th:text="${asset.serialNumber}"></p></div><span class="badge large" th:text="${asset.status}"></span></header><div th:replace="~{fragments :: notice}"></div>
-<div class="detail-grid"><section class="panel padded"><h2>Equipment details</h2>
-<form th:if="${me.isAdmin()}" th:action="@{/assets/{id}(id=${asset.id})}" method="post"><input type="hidden" name="version" th:value="${asset.version}"><div class="form-grid"><label>Type<select name="type"><option th:each="t : ${assetTypes}" th:text="${t}" th:selected="${t == asset.type}"></option></select></label><label>Manufacturer<input name="manufacturer" th:value="${asset.manufacturer}" required maxlength="80"></label><label>Model<input name="model" th:value="${asset.model}" required maxlength="100"></label><label>Serial number<input name="serial" th:value="${asset.serialNumber}" required maxlength="100"></label><label>Purchased<input type="date" name="purchaseDate" th:value="${asset.purchaseDate}" required></label><label>Status<select name="status"><option th:each="s : ${asset.ownerId != null ? {'Assigned'} : {'Available','Repair','Retired'}}" th:text="${s}" th:selected="${s == asset.status}"></option></select></label></div><button class="primary" type="submit">Save details</button></form>
-<dl th:unless="${me.isAdmin()}"><dt>Type</dt><dd th:text="${asset.type}"></dd><dt>Purchased</dt><dd th:text="${asset.purchaseDate}"></dd><dt>Assigned to</dt><dd th:text="${asset.ownerName ?: 'Unassigned'}"></dd></dl>
-</section><section class="panel padded"><h2>Current assignment</h2><p class="owner-name" th:text="${asset.ownerName ?: 'No one yet'}"></p>
-<form th:if="${me.isAdmin() and asset.ownerId != null}" th:action="@{/assets/{id}/return(id=${asset.id})}" method="post"><p class="help">Returning it makes the equipment available again and keeps the assignment record.</p><button type="submit">Return to stock</button></form>
-<form th:if="${me.isAdmin() and asset.status == 'Available'}" th:action="@{/assets/{id}/assign(id=${asset.id})}" method="post"><label>Assign to<select name="owner" required><option value="">Choose a person</option><option th:each="p : ${people}" th:value="${p.id}" th:text="${p.name}"></option></select></label><button type="submit">Assign equipment</button></form>
-</section></div><section class="panel padded space-top" th:if="${me.isStaff()}"><h2>Assignment history</h2><p class="muted" th:if="${#lists.isEmpty(assignments)}">No assignments yet.</p><div class="table-wrap" th:unless="${#lists.isEmpty(assignments)}"><table><thead><tr><th>Person</th><th>Assigned</th><th>Returned</th></tr></thead><tbody><tr th:each="a : ${assignments}"><td th:text="${a.name}"></td><td th:text="${a.assigned_at}"></td><td th:text="${a.returned_at ?: 'Current assignment'}"></td></tr></tbody></table></div></section></main></body></html>
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments :: head('Equipment details')}"></head>
+  <body>
+    <aside th:replace="~{fragments :: nav('assets')}"></aside>
+    <main class="main">
+      <div class="topline">
+        <a href="/assets">← Equipment</a
+        ><span th:text="${'AS-' + asset.id}"></span>
+      </div>
+      <header class="page-header">
+        <div>
+          <p class="eyebrow" th:text="${asset.type}"></p>
+          <h1
+            class="detail-title"
+            th:text="${asset.manufacturer + ' ' + asset.model}"
+          ></h1>
+          <p class="muted mono" th:text="${asset.serialNumber}"></p>
+        </div>
+        <span class="badge large" th:text="${asset.status}"></span>
+      </header>
+      <div th:replace="~{fragments :: notice}"></div>
+      <div class="detail-grid">
+        <section class="panel padded">
+          <h2>Equipment details</h2>
+          <form
+            th:if="${me.isAdmin()}"
+            th:action="@{/assets/{id}(id=${asset.id})}"
+            method="post"
+          >
+            <input type="hidden" name="version" th:value="${asset.version}" />
+            <div class="form-grid">
+              <label
+                >Type<select name="type">
+                  <option
+                    th:each="t : ${assetTypes}"
+                    th:text="${t}"
+                    th:selected="${t == asset.type}"
+                  ></option></select></label
+              ><label
+                >Manufacturer<input
+                  name="manufacturer"
+                  th:value="${asset.manufacturer}"
+                  required
+                  maxlength="80" /></label
+              ><label
+                >Model<input
+                  name="model"
+                  th:value="${asset.model}"
+                  required
+                  maxlength="100" /></label
+              ><label
+                >Serial number<input
+                  name="serial"
+                  th:value="${asset.serialNumber}"
+                  required
+                  maxlength="100" /></label
+              ><label
+                >Purchased<input
+                  type="date"
+                  name="purchaseDate"
+                  th:value="${asset.purchaseDate}"
+                  required /></label
+              ><label
+                >Status<select name="status">
+                  <option
+                    th:each="s : ${asset.ownerId != null ? {'Assigned'} : {'Available','Repair','Retired'}}"
+                    th:text="${s}"
+                    th:selected="${s == asset.status}"
+                  ></option></select
+              ></label>
+            </div>
+            <button class="primary" type="submit">Save details</button>
+          </form>
+          <dl th:unless="${me.isAdmin()}">
+            <dt>Type</dt>
+            <dd th:text="${asset.type}"></dd>
+            <dt>Purchased</dt>
+            <dd th:text="${asset.purchaseDate}"></dd>
+            <dt>Assigned to</dt>
+            <dd th:text="${asset.ownerName ?: 'Unassigned'}"></dd>
+          </dl>
+        </section>
+        <section class="panel padded">
+          <h2>Current assignment</h2>
+          <p
+            class="owner-name"
+            th:text="${asset.ownerName ?: 'No one yet'}"
+          ></p>
+          <form
+            th:if="${me.isAdmin() and asset.ownerId != null}"
+            th:action="@{/assets/{id}/return(id=${asset.id})}"
+            method="post"
+          >
+            <p class="help">
+              Returning it makes the equipment available again and keeps the
+              assignment record.
+            </p>
+            <button type="submit">Return to stock</button>
+          </form>
+          <form
+            th:if="${me.isAdmin() and asset.status == 'Available'}"
+            th:action="@{/assets/{id}/assign(id=${asset.id})}"
+            method="post"
+          >
+            <label
+              >Assign to<select name="owner" required>
+                <option value="">Choose a person</option>
+                <option
+                  th:each="p : ${people}"
+                  th:value="${p.id}"
+                  th:text="${p.name}"
+                ></option></select></label
+            ><button type="submit">Assign equipment</button>
+          </form>
+        </section>
+      </div>
+      <section class="panel padded space-top" th:if="${me.isStaff()}">
+        <h2>Assignment history</h2>
+        <p class="muted" th:if="${#lists.isEmpty(assignments)}">
+          No assignments yet.
+        </p>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(assignments)}">
+          <table>
+            <thead>
+              <tr>
+                <th>Person</th>
+                <th>Assigned</th>
+                <th>Returned</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="a : ${assignments}">
+                <td th:text="${a.name}"></td>
+                <td th:text="${a.assigned_at}"></td>
+                <td th:text="${a.returned_at ?: 'Current assignment'}"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
