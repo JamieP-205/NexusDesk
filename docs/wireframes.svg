@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="440" viewBox="0 0 1440 440" role="img" aria-labelledby="title desc"><title id="title">NexusDesk interface wireframes</title><desc id="desc">Three simple layouts for a ticket queue, a ticket detail page and an equipment register.</desc><rect width="1440" height="440" fill="#f3f5f4"/>
+<g transform="translate(25,35)"><rect width="440" height="370" rx="8" fill="white" stroke="#bbc8bf"/><text x="20" y="35" font-family="Arial,sans-serif" font-size="20" fill="#172d28">Ticket queue</text>
+<rect x="20" y="70" width="160" height="34" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="92.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Search titles</text>
+<rect x="190" y="70" width="90" height="34" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="200" y="92.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Status</text>
+<rect x="300" y="70" width="110" height="34" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="310" y="92.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Priority</text>
+<rect x="20" y="127" width="390" height="40" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="152.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Ticket / Priority / Status / Owner</text>
+<rect x="20" y="176" width="390" height="45" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="203.5" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Wi-Fi disconnects</text>
+<rect x="20" y="230" width="390" height="45" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="257.5" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">New account request</text>
+<rect x="20" y="284" width="390" height="45" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="311.5" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Printer marks pages</text>
+</g>
+<g transform="translate(500,35)"><rect width="440" height="370" rx="8" fill="white" stroke="#bbc8bf"/><text x="20" y="35" font-family="Arial,sans-serif" font-size="20" fill="#172d28">Ticket details</text>
+<rect x="20" y="70" width="250" height="55" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="102.5" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Problem description</text>
+<rect x="285" y="70" width="125" height="55" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="295" y="102.5" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Status + priority</text>
+<rect x="20" y="140" width="250" height="90" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="190.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Conversation</text>
+<rect x="285" y="140" width="125" height="90" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="295" y="190.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Technician + save</text>
+<rect x="20" y="245" width="250" height="80" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="290.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">History timeline</text>
+</g>
+<g transform="translate(975,35)"><rect width="440" height="370" rx="8" fill="white" stroke="#bbc8bf"/><text x="20" y="35" font-family="Arial,sans-serif" font-size="20" fill="#172d28">Equipment register</text>
+<rect x="20" y="70" width="240" height="34" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="92.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Filter by current owner</text>
+<rect x="280" y="70" width="130" height="34" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="290" y="92.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Add equipment</text>
+<rect x="20" y="127" width="390" height="40" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="152.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Device / Serial / Status / Owner</text>
+<rect x="20" y="176" width="390" height="45" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="203.5" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Laptop / Assigned / Alex</text>
+<rect x="20" y="230" width="390" height="45" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="257.5" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Monitor / Available</text>
+<rect x="20" y="292" width="390" height="44" rx="4" fill="#f1f4f0" stroke="#cad4c9"/><text x="30" y="319.0" font-family="Arial,sans-serif" font-size="13" fill="#3f5347">Details → Assign / Return / History</text>
+</g>
+</svg>

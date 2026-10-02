@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments :: head('Support tickets')}"></head>
+  <body>
+    <aside th:replace="~{fragments :: nav('tickets')}"></aside>
+    <main class="main">
+      <div class="topline">
+        <span>WORKSPACE / TICKETS</span
+        ><span th:text="${me.isStaff() ? 'Team queue' : 'My requests'}"></span>
+      </div>
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">SUPPORT DESK</p>
+          <h1 th:text="${me.isStaff() ? 'Support tickets' : 'My tickets'}"></h1>
+          <p class="muted">
+            Keep track of the problem, the conversation and what happens next.
+          </p>
+        </div>
+        <a class="button primary" href="/tickets/new">+ New ticket</a>
+      </header>
+      <div th:replace="~{fragments :: notice}"></div>
+      <form class="panel filters" action="/tickets" method="get">
+        <label class="search-field"
+          >Search titles<input
+            name="q"
+            th:value="${q}"
+            maxlength="140"
+            placeholder="Search for a ticket…"
+        /></label>
+        <label
+          >Status<select name="status">
+            <option value="">All statuses</option>
+            <option
+              th:each="s : ${statuses}"
+              th:value="${s}"
+              th:text="${s}"
+              th:selected="${s == status}"
+            ></option></select
+        ></label>
+        <label
+          >Priority<select name="priority">
+            <option value="">All priorities</option>
+            <option
+              th:each="p : ${priorities}"
+              th:value="${p}"
+              th:text="${p}"
+              th:selected="${p == priority}"
+            ></option></select
+        ></label>
+        <label
+          >Category<select name="category">
+            <option value="">All categories</option>
+            <option
+              th:each="c : ${categories}"
+              th:value="${c}"
+              th:text="${c}"
+              th:selected="${c == category}"
+            ></option></select
+        ></label>
+        <details class="advanced">
+          <summary>People &amp; dates</summary>
+          <div class="form-grid">
+            <label th:if="${me.isStaff()}"
+              >Created by<select name="creator">
+                <option value="">Anyone</option>
+                <option
+                  th:each="p : ${people}"
+                  th:value="${p.id}"
+                  th:text="${p.name}"
+                  th:selected="${p.id == creator}"
+                ></option></select
+            ></label>
+            <label th:if="${me.isStaff()}"
+              >Assigned to<select name="assignee">
+                <option value="">Anyone</option>
+                <option
+                  th:each="p : ${technicians}"
+                  th:value="${p.id}"
+                  th:text="${p.name}"
+                  th:selected="${p.id == assignee}"
+                ></option></select
+            ></label>
+            <label
+              >Created from<input
+                type="date"
+                name="from"
+                th:value="${from}" /></label
+            ><label
+              >Created to<input type="date" name="to" th:value="${to}"
+            /></label>
+          </div>
+        </details>
+        <div class="actions">
+          <button type="submit">Apply filters</button
+          ><a href="/tickets">Clear</a>
+        </div>
+      </form>
+      <section class="panel">
+        <div class="section-heading">
+          <h2>Ticket queue</h2>
+          <span
+            class="badge"
+            th:text="${#lists.size(tickets) + ' tickets'}"
+          ></span>
+        </div>
+        <div th:replace="~{fragments :: ticketTable(${tickets})}"></div>
+      </section>
+    </main>
+  </body>
+</html>
