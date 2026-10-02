@@ -1,0 +1,28 @@
+name: Bug report
+description: Something in NexusDesk isn't behaving as expected.
+title: 'Bug: '
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include the page and which role you used. Leave out passwords and private data.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can I reproduce it?
+      placeholder: 'Sign in as a technician, open a ticket, then...'
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Java version and browser
