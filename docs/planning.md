@@ -1,6 +1,8 @@
 # My plan for NexusDesk
 
-I want one place to track support requests and equipment. I’m using the supplied Northstar brief as a fictional client scenario, not claiming this is software I delivered during a placement.
+I want one place to track support requests and equipment. I wrote the Northstar brief myself as practice; Northstar is a fictional company, not a client and not a placement.
+
+I use this plan to keep the first implementation focused and update it as the design changes.
 
 ## Starting scope — 1 October 2026
 
@@ -22,15 +24,15 @@ I’m keeping dependencies managed by Spring Boot 3.5.16 and targeting Java 17. 
 
 ## What I’m leaving for later
 
-Email, uploads, SLAs and cloud deployment are stretch work. I don’t want buttons for features that don’t exist. Sites runs JavaScript/Workers rather than this Java server, so it is not the runtime for this version.
+Email, uploads, SLAs and cloud deployment are stretch work. I don’t want buttons for features that don’t exist.
 
 ## Research used for this build
 
-I checked these sources on 1 October 2026:
+The technical references for my implementation:
 
 - [Spring JDBC](https://docs.spring.io/spring-framework/reference/data-access/jdbc/core.html): prepared parameters, row mapping and connection handling.
 - [Spring Security CSRF](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html): keep protection enabled on state-changing forms.
-- [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html): salted adaptive hashes. I chose PBKDF2-HMAC-SHA256 with 600,000 iterations because Spring supports it without another crypto dependency. Argon2id is OWASP’s first choice; this is a documented trade-off, not a claim that PBKDF2 is better.
+- [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html): salted adaptive hashes. The plan was PBKDF2-HMAC-SHA256 with 600,000 iterations because Spring supports it without another crypto dependency. The code actually ended up using HMAC-SHA1 through a deprecated constructor; see [SECURITY.md](../SECURITY.md). Argon2id is OWASP’s first choice.
 - [H2 features](https://h2database.com/html/features.html): embedded file storage and transactions. A PostgreSQL move needs separate migration and concurrency testing.
 
 ## First implementation checkpoint
