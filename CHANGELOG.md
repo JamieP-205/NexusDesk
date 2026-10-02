@@ -2,7 +2,7 @@
 
 ## 0.1.0 — 2 October 2026
 
-First working version, built by the development tools from my brief:
+My first working version, built from the practice brief:
 
 - Login and employee, technician and administrator access.
 - Tickets, status transitions, assignment, comments and permanent history.
