@@ -2,7 +2,7 @@
 
 ## 0.1.0 — 2 October 2026
 
-First working version, built by Codex from my brief:
+First working version, built from my brief with substantial help from Codex:
 
 - Login and employee, technician and administrator access.
 - Tickets, status transitions, assignment, comments and permanent history.
