@@ -19,6 +19,7 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: maven
       - run: ./mvnw --batch-mode verify
+      - run: python3 scripts/smoke_test.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
