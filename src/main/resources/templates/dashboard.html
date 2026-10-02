@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments :: head('Overview')}"></head>
+  <body>
+    <aside th:replace="~{fragments :: nav('dashboard')}"></aside>
+    <main class="main">
+      <div class="topline">
+        <span>WORKSPACE / OVERVIEW</span
+        ><span>Northstar Digital Solutions</span>
+      </div>
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">THE SUPPORT DESK</p>
+          <h1>Everything in view.</h1>
+          <p class="muted">
+            A quick look at the queue and the equipment ready to go.
+          </p>
+        </div>
+        <a class="button primary" href="/tickets/new">+ New ticket</a>
+      </header>
+      <div th:replace="~{fragments :: notice}"></div>
+      <section class="stats" aria-label="Support totals">
+        <div class="stat" th:each="stat : ${totals}">
+          <span th:text="${stat.key}"></span
+          ><strong th:text="${stat.value}"></strong
+          ><small
+            th:text="${stat.key == 'Resolved this week' ? 'Rolling 7 days' : 'Current total'}"
+          ></small>
+        </div>
+      </section>
+      <div class="chart-grid">
+        <section class="panel chart-panel">
+          <div class="section-heading">
+            <h2>Tickets by category</h2>
+            <span class="muted small">All tickets</span>
+          </div>
+          <p class="empty" th:if="${#lists.isEmpty(categoriesChart)}">
+            The chart will appear after the first ticket.
+          </p>
+          <div class="bar-row" th:each="bar : ${categoriesChart}">
+            <label
+              th:for="${'category-' + bar.label}"
+              th:text="${bar.label}"
+            ></label
+            ><progress
+              th:id="${'category-' + bar.label}"
+              th:value="${bar.total}"
+              th:max="${chartMax}"
+            ></progress
+            ><strong th:text="${bar.total}"></strong>
+          </div>
+        </section>
+        <section class="panel chart-panel">
+          <div class="section-heading">
+            <h2>Tickets by priority</h2>
+            <span class="muted small">All tickets</span>
+          </div>
+          <p class="empty" th:if="${#lists.isEmpty(prioritiesChart)}">
+            No ticket data yet.
+          </p>
+          <div class="bar-row" th:each="bar : ${prioritiesChart}">
+            <label
+              th:for="${'priority-' + bar.label}"
+              th:text="${bar.label}"
+            ></label
+            ><progress
+              th:id="${'priority-' + bar.label}"
+              th:value="${bar.total}"
+              th:max="${chartMax}"
+            ></progress
+            ><strong th:text="${bar.total}"></strong>
+          </div>
+        </section>
+      </div>
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <h2>Recently updated</h2>
+            <p class="muted small">The latest activity across the desk.</p>
+          </div>
+          <a href="/tickets">View all tickets →</a>
+        </div>
+        <div th:replace="~{fragments :: ticketTable(${recent})}"></div>
+      </section>
+      <footer>NexusDesk <span>Personal project · v0.1.0</span></footer>
+    </main>
+  </body>
+</html>
