@@ -1,7 +1,7 @@
 name: Java checks
 on:
   push:
-    branches: [main, feature/nexusdesk-app]
+    branches: [main]
   pull_request:
 permissions:
   contents: read
@@ -12,15 +12,15 @@ jobs:
       matrix:
         java: ['17', '21']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
           cache: maven
       - run: ./mvnw --batch-mode verify
       - run: python3 scripts/smoke_test.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: test-results-java-${{ matrix.java }}
