@@ -2,7 +2,7 @@
 
 ## 0.1.0 — 2 October 2026
 
-I added the first working version of NexusDesk:
+First working version, built by Codex from my brief:
 
 - Login and employee, technician and administrator access.
 - Tickets, status transitions, assignment, comments and permanent history.
@@ -13,6 +13,4 @@ I added the first working version of NexusDesk:
 - A separate demo profile and example records.
 - Database, permission and rendered-page tests.
 
-During the build I fixed H2 generated-key handling and kept resolution notes in the audit trail when a ticket is reopened. I also added stale-edit checks for tickets and equipment.
-
-I started the implementation on 1 October and finished the packaged-app checks and documentation on 2 October.
+During the build, Codex fixed H2 generated-key handling, kept resolution notes in the audit trail when a ticket is reopened, and added stale-edit checks for tickets and equipment. The implementation started on 1 October and the packaged-app checks and documentation were finished on 2 October.

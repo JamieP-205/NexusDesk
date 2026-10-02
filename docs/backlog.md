@@ -1,6 +1,6 @@
 # My backlog
 
-I grouped the build into small slices. These are work stages, not claims about weeks or sprints that already happened.
+The first version was built in two Codex sessions, so the "Complete" rows were all done then. The "To do" rows are what's next.
 
 | Slice | User story | Acceptance check | Status |
 | --- | --- | --- | --- |
@@ -17,7 +17,5 @@ I grouped the build into small slices. These are work stages, not claims about w
 | Paging | As a technician, I want pages of results so that a large queue stays usable. | Stable ordering and filters preserved between pages. | To do |
 | Recovery | As an account holder, I want a safe password reset so that I can regain access. | Expiring single-use tokens, rate limiting, no account disclosure. | To do |
 | Similar tickets | As a technician, I want to find previous fixes so that I can avoid repeating investigation. | Start with a measured keyword prototype using fictional data. | To do |
-
-I move work through To do → In progress → Testing → Complete. The initial build is recorded in the actual commits and journal; future work should use new branches and issues as it happens.
 
 I’m tracking the next two changes in GitHub: [field-level form errors](https://github.com/JamieP-205/NexusDesk/issues/1) and [ticket pagination](https://github.com/JamieP-205/NexusDesk/issues/2).
