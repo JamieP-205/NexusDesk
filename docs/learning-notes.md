@@ -19,4 +19,4 @@ A sensible first change is field-level validation feedback. It would make the ap
 - What did I change myself, and how did I check it?
 - What would I do differently in the next version?
 
-I’m deliberately leaving these as questions. The build session can't supply personal learning experiences I haven't had yet.
+I'm leaving these as questions until I've actually done it.
