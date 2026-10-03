@@ -4,7 +4,7 @@ I wanted a project where Java and SQL do something useful. NexusDesk is a small 
 
 I wrote the brief myself as practice, for a fictional company called Northstar Digital Solutions. It isn't a real client, it isn't coursework, and it isn't something I've delivered for anyone.
 
-I developed the project from the practice brief, keeping the Java services, relational schema and server-rendered interface in one small codebase. The [build log](docs/dev-journal.md), [testing notes](docs/testing.md) and [code walkthrough](docs/learning-notes.md) explain the implementation and the checks behind it.
+I wrote the brief and used AI coding agents to generate most of the first version, keeping the Java services, relational schema and server-rendered interface in one small codebase. I'm now working through the code so I can explain and change every part of it myself. The [build log](docs/dev-journal.md), [testing notes](docs/testing.md) and [code walkthrough](docs/learning-notes.md) explain the implementation and the checks behind it.
 
 ![NexusDesk dashboard with ticket totals, two charts and recent activity](docs/screenshots/dashboard.png)
 
