@@ -41,7 +41,7 @@ public class DemoController {
         Sandbox sandbox = SandboxContext.current();
         if (sandbox == null) {
             try {
-                sandbox = registry.create();
+                sandbox = registry.create(client(request));
             } catch (SandboxRegistry.Busy busy) {
                 flash.addFlashAttribute("demoError", busy.getMessage());
                 return "redirect:/login";
@@ -66,7 +66,7 @@ public class DemoController {
         if (old == null) return "redirect:/login";
         Sandbox fresh;
         try {
-            fresh = registry.create();
+            fresh = registry.create(client(request));
         } catch (SandboxRegistry.Busy busy) {
             flash.addFlashAttribute("error", busy.getMessage());
             return "redirect:/";
@@ -76,6 +76,17 @@ public class DemoController {
         SandboxContext.bind(fresh);
         flash.addFlashAttribute("info", "Your demo has been reset to the original fictional data.");
         return signIn(LANDING.containsKey(role) ? role : "employee", request, response, flash);
+    }
+
+    /**
+     * A best-effort visitor key for the per-visitor limits: the first X-Forwarded-For address. A visitor can
+     * forge it to dodge their own limit, but never to use up anyone else's, which is the safer failure
+     * because the hosting proxy chain isn't under our control. The overall caps still apply.
+     */
+    private static String client(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) return forwarded.split(",")[0].strip();
+        return request.getRemoteAddr();
     }
 
     private String signIn(String role, HttpServletRequest request, HttpServletResponse response, RedirectAttributes flash) {

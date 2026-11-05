@@ -30,9 +30,12 @@ class HostedDemoTest {
 
     @org.junit.jupiter.api.AfterEach void clear() { registry.removeAll(); }
 
+    static int visitor;
+
     MockHttpSession start(String role) throws Exception {
         var session = new MockHttpSession();
-        MvcResult result = mvc.perform(post("/demo/start").param("role", role).session(session).with(csrf()))
+        MvcResult result = mvc.perform(post("/demo/start").param("role", role).session(session).with(csrf())
+                        .header("X-Forwarded-For", "10.0.0." + (++visitor % 250)))
                 .andExpect(status().is3xxRedirection()).andReturn();
         return (MockHttpSession) result.getRequest().getSession(false);
     }
@@ -165,11 +168,24 @@ class HostedDemoTest {
                 .andExpect(redirectedUrl("/"));
     }
 
-    @Test void startingWhenFullGivesAClearMessage() throws Exception {
-        for (int i = 0; i < 6; i++) start("employee");
-        mvc.perform(post("/demo/start").param("role", "employee").session(new MockHttpSession()).with(csrf()))
-                .andExpect(redirectedUrl("/login"))
+    @Test void aFullDemoOnlyReplacesIdleSandboxes() throws Exception {
+        for (int i = 0; i < 6; i++) startFrom("10.9.0." + i);
+        // Everyone is active, so a newcomer is asked to wait rather than pushing someone out.
+        mvc.perform(post("/demo/start").param("role", "employee").session(new MockHttpSession()).with(csrf())
+                        .header("X-Forwarded-For", "10.9.1.1"))
                 .andExpect(flash().attribute("demoError", containsString("full")));
+    }
+
+    @Test void oneAddressCantTakeEverySandbox() throws Exception {
+        for (int i = 0; i < 6; i++) startFrom("10.8.0.1");
+        mvc.perform(post("/demo/start").param("role", "employee").session(new MockHttpSession()).with(csrf())
+                        .header("X-Forwarded-For", "10.8.0.1, 10.0.0.2"))
+                .andExpect(flash().attribute("demoError", containsString("several demos")));
+    }
+
+    MockHttpSession startFrom(String address) throws Exception {
+        return (MockHttpSession) mvc.perform(post("/demo/start").param("role", "employee").session(new MockHttpSession())
+                .with(csrf()).header("X-Forwarded-For", address)).andReturn().getRequest().getSession(false);
     }
 
 }

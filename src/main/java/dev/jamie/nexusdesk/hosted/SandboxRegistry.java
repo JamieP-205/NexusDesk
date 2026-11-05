@@ -34,7 +34,12 @@ public class SandboxRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(SandboxRegistry.class);
     private static final SecureRandom RANDOM = new SecureRandom();
     private final Map<String, Sandbox> sandboxes = new ConcurrentHashMap<>();
-    private final Deque<Instant> recentCreations = new ArrayDeque<>();
+    private final Deque<Map.Entry<Instant, String>> recentCreations = new ArrayDeque<>();
+    private final Map<String, String> owners = new ConcurrentHashMap<>();
+    /** Per visitor address, as reported by the hosting proxy. */
+    private static final int CLIENT_STARTS_PER_MINUTE = 6, CLIENT_LIVE = 10;
+    /** When full, only a sandbox unused for this long can make way for a newcomer. */
+    private static final Duration EVICT_AFTER_IDLE = Duration.ofMinutes(5);
     private final DemoSeeder seeder;
     private final Clock clock;
     private final int maxSandboxes;
@@ -100,14 +105,20 @@ public class SandboxRegistry {
         }
     }
 
-    public Sandbox create() {
+    public Sandbox create() { return create("unknown"); }
+
+    public Sandbox create(String client) {
         Instant now = clock.instant();
         synchronized (recentCreations) {
-            while (!recentCreations.isEmpty() && recentCreations.peekFirst().isBefore(now.minusSeconds(60))) recentCreations.removeFirst();
+            while (!recentCreations.isEmpty() && recentCreations.peekFirst().getKey().isBefore(now.minusSeconds(60))) recentCreations.removeFirst();
             if (recentCreations.size() >= creationsPerMinute) throw new Busy("Lots of people are starting demos right now. Please try again in a minute.");
-            if (sandboxes.size() >= maxSandboxes) evictOldestIdle(now);
+            if (recentCreations.stream().filter(e -> e.getValue().equals(client)).count() >= CLIENT_STARTS_PER_MINUTE
+                    || owners.values().stream().filter(client::equals).count() >= CLIENT_LIVE) {
+                throw new Busy("You've started several demos in a short time. Please use the one you have, or try again in a minute.");
+            }
+            if (sandboxes.size() >= maxSandboxes) evictIdle(now);
             if (sandboxes.size() >= maxSandboxes) throw new Busy("The demo is full right now. Please try again in a few minutes.");
-            recentCreations.addLast(now);
+            recentCreations.addLast(Map.entry(now, client));
         }
         String id = token();
         JdbcDataSource db = memory("sbx_" + id);
@@ -119,6 +130,7 @@ public class SandboxRegistry {
         }
         Sandbox sandbox = new Sandbox(id, db, now);
         sandboxes.put(id, sandbox);
+        owners.put(id, client);
         return sandbox;
     }
 
@@ -135,6 +147,7 @@ public class SandboxRegistry {
 
     public void remove(String id) {
         Sandbox sandbox = id == null ? null : sandboxes.remove(id);
+        if (id != null) owners.remove(id);
         if (sandbox != null) shutdown(sandbox.dataSource());
     }
 
@@ -151,12 +164,13 @@ public class SandboxRegistry {
         return s.lastSeen().plus(idle).isBefore(now) || s.created().plus(maxAge).isBefore(now);
     }
 
-    /** At capacity, the sandbox unused for longest gives way if it has been idle for at least ten minutes. */
-    private void evictOldestIdle(Instant now) {
-        sandboxes.values().stream()
-                .filter(s -> s.lastSeen().plus(Duration.ofMinutes(10)).isBefore(now))
-                .min(Comparator.comparing(Sandbox::lastSeen))
-                .ifPresent(s -> remove(s.id()));
+    /**
+     * At capacity, the sandbox unused for longest gives way, but only if nobody has used it for a few
+     * minutes, so newcomers can't push out someone who is using the demo.
+     */
+    private void evictIdle(Instant now) {
+        sandboxes.values().stream().filter(s -> s.lastSeen().plus(EVICT_AFTER_IDLE).isBefore(now))
+                .min(Comparator.comparing(Sandbox::lastSeen)).ifPresent(s -> remove(s.id()));
     }
 
     private static JdbcDataSource memory(String name) {
