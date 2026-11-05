@@ -1105,3 +1105,77 @@ code {
     padding: 0 16px 10px;
   }
 }
+
+/* Added in 0.2.1: the hosted browser demo */
+.demo-panel {
+  margin: 18px 0 0;
+  padding: 14px;
+  border: 1px solid #335044;
+  border-radius: 8px;
+  background: #16352c;
+  font-size: 0.8rem;
+  color: #d5e3da;
+}
+.demo-panel h2 {
+  font-size: 0.85rem;
+  margin: 0 0 6px;
+  color: var(--lime);
+}
+.demo-panel p {
+  margin: 0 0 10px;
+}
+.demo-panel .demo-panel-label {
+  margin: 0 0 6px;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b1c3b8;
+}
+.demo-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.demo-roles button {
+  min-height: 36px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+  background: #203e33;
+  color: #eff7ed;
+  border-color: #3d5d50;
+}
+.demo-roles button[aria-pressed="true"] {
+  background: var(--lime);
+  color: var(--dark);
+  border-color: var(--lime);
+}
+.demo-panel .text-button {
+  font-size: 0.8rem;
+  text-decoration: underline;
+}
+.demo-start form {
+  margin: 0 0 10px;
+}
+.demo-start button {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+}
+.demo-start button small {
+  font-weight: 400;
+  opacity: 0.85;
+}
+.password-sign-in {
+  margin: 14px 0 6px;
+  font-size: 0.875rem;
+}
+.password-sign-in form {
+  margin-top: 12px;
+}
+@media (max-width: 760px) {
+  .demo-panel {
+    margin-top: 12px;
+  }
+}

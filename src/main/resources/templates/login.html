@@ -15,7 +15,26 @@
       <section class="login-form">
         <p class="eyebrow">YOUR WORKSPACE</p>
         <h2>Welcome back</h2>
-        <p class="muted">Sign in with your work account.</p>
+        <p class="muted" th:unless="${hostedMode}">Sign in with your work account.</p>
+        <section class="demo-start" th:if="${hostedMode}" aria-labelledby="demo-start-heading">
+          <h3 id="demo-start-heading">Try the demo</h3>
+          <p class="small">
+            Choose a role. You get your own copy of the fictional data, which nobody
+            else sees. It's deleted when you sign out or after an hour without
+            activity, and you can switch roles at any time.
+          </p>
+          <p th:if="${param.ended}" class="notice" role="status">
+            Your demo ended, so its data was deleted. Start a new one below.
+          </p>
+          <p th:if="${demoError}" class="error-note" role="alert" th:text="${demoError}"></p>
+          <form th:action="@{/demo/start}" method="post" th:each="r : ${ {'employee','technician','admin'} }">
+            <input type="hidden" name="role" th:value="${r}" />
+            <button class="full" type="submit" th:classappend="${r == 'employee'} ? 'primary'">
+              <span th:text="${r == 'admin' ? 'Administrator' : (r == 'technician' ? 'IT technician' : 'Employee')}"></span>
+              <small th:text="${r == 'admin' ? 'Accounts, equipment and the full queue' : (r == 'technician' ? 'Work the ticket queue' : 'Raise and follow your own tickets')}"></small>
+            </button>
+          </form>
+        </section>
         <p th:if="${param.error}" class="error-note" role="alert">
           The email or password wasn't recognised.
         </p>
@@ -27,7 +46,19 @@
         <p th:if="${param.expired}" class="notice">
           Your account changed or your session ended. Please sign in again.
         </p>
-        <form th:action="@{/login}" method="post">
+        <details class="password-sign-in" th:if="${hostedMode}">
+          <summary>Sign in with a password instead</summary>
+          <p class="small muted">
+            Works for the demo accounts (password <code>Demo-password-123</code>) and
+            any account you create, inside your own demo only.
+          </p>
+          <form th:action="@{/login}" method="post">
+            <label>Email address<input name="username" type="email" autocomplete="username" required maxlength="160" /></label>
+            <label>Password<input name="password" type="password" autocomplete="current-password" required maxlength="128" /></label>
+            <button class="full" type="submit">Sign in <span>→</span></button>
+          </form>
+        </details>
+        <form th:action="@{/login}" method="post" th:unless="${hostedMode}">
           <label
             >Email address<input
               name="username"
@@ -50,7 +81,12 @@
             Sign in <span>→</span>
           </button>
         </form>
-        <p class="small muted">Need an account? Ask your IT administrator.</p>
+        <p class="small muted" th:unless="${hostedMode}">Need an account? Ask your IT administrator.</p>
+        <p class="small muted" th:if="${hostedMode}">
+          A practice project with fictional people and records.
+          <a href="https://github.com/JamieP-205/NexusDesk">Source code</a> ·
+          <a href="https://jamieparr.dev/projects/nexusdesk/">About this project</a>
+        </p>
         <section class="demo-accounts" th:if="${demoMode}" aria-labelledby="demo-heading">
           <h3 id="demo-heading">Demo accounts</h3>
           <p class="small">

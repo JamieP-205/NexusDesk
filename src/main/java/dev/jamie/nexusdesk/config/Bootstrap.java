@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * database has no accounts, and refuses to run against a demo database.
  */
 @Component
-@Profile("!demo")
+@Profile("!demo & !hosted")
 @Order(0)
 public class Bootstrap implements ApplicationRunner {
     private final UserService users;

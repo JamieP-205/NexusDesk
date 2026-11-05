@@ -16,6 +16,24 @@
         ></a
       >
       <p class="demo-flag" th:if="${demoMode}">Demo data · fictional records</p>
+      <section class="demo-panel" th:if="${hostedMode}" aria-labelledby="demo-panel-heading">
+        <h2 id="demo-panel-heading">Your browser demo</h2>
+        <p>Fictional data, private to you. It's deleted when you sign out or after an hour without activity.</p>
+        <p class="demo-panel-label">View as</p>
+        <div class="demo-roles">
+          <form th:action="@{/demo/switch}" method="post" th:each="r : ${ {'employee','technician','admin'} }">
+            <input type="hidden" name="role" th:value="${r}" />
+            <button type="submit"
+              th:text="${r == 'admin' ? 'Admin' : (r == 'technician' ? 'Technician' : 'Employee')}"
+              th:aria-pressed="${(r == 'admin' and me.role == 'ADMIN') or (r == 'technician' and me.role == 'TECHNICIAN') or (r == 'employee' and me.role == 'EMPLOYEE')}"
+            ></button>
+          </form>
+        </div>
+        <form th:action="@{/demo/reset}" method="post">
+          <input type="hidden" name="role" th:value="${me.role == 'ADMIN' ? 'admin' : (me.role == 'TECHNICIAN' ? 'technician' : 'employee')}" />
+          <button type="submit" class="text-button">Reset demo</button>
+        </form>
+      </section>
       <p class="workspace-label">NORTHSTAR / IT WORKSPACE</p>
       <nav aria-label="Main navigation">
         <a

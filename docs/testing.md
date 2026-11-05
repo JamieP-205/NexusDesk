@@ -2,6 +2,20 @@
 
 The checks below were run by the AI tools that built each version, not by me. I'll add my own results at the end as I go.
 
+## Version 0.2.1 (Claude, 5 November 2026)
+
+Same machine and tools as 0.2.0.
+
+| Check | Result |
+| --- | --- |
+| `.\mvnw.cmd verify` | 83 tests, 0 failures (11 new in `HostedDemoTest`) |
+| `python scripts\smoke_test.py` | PASS (as for 0.2.0) |
+| Hosted profile run locally | Two visitors got separate data; sandboxes created in 30–60 ms; ticket IDs continued correctly after copying the template |
+| Downloaded ZIP, Smart App Control on, standard user | Details in [Windows download](windows-download.md): `.cmd` blocked as expected; `java -jar … --demo` started, signed in and kept data outside the download folder |
+| `scripts/package_release.py` run twice | Identical ZIP checksum both times |
+
+An automated security review of the hosted-demo commit pointed out that history and assignment rows weren't capped. A total-row limit per sandbox now covers them, tested by `historyGrowthIsCappedToo`.
+
 ## Version 0.2.0 (Claude, 4–5 November 2026)
 
 Run on Windows 11 with OpenJDK 27, Maven 3.9.11 (wrapper) and Python 3.14. The CI workflow runs the same checks on Java 17, 21 and 25.

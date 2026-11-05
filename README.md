@@ -4,7 +4,7 @@ I wanted a project where Java and SQL do something useful. NexusDesk is a small 
 
 I wrote the brief myself as practice, for a fictional company called Northstar Digital Solutions. It isn't a real client, it isn't coursework, it has no users, and it isn't production software.
 
-**How it was built:** I set the brief. Codex built the first version (0.1.0) in two sessions on 1–2 October 2026, including the code, tests, docs and screenshots. Claude (Anthropic's AI assistant, in Claude Code) made version 0.2.0 on 4–5 November 2026 at my request: fixing the ticket assignment bug and password hashing, adding sign-in throttling, pagination and field-level validation, separating the demo, adding backup tooling and tests, and rewriting these docs. Those commits carry a `Co-Authored-By: Claude` trailer. I haven't changed the code myself yet; I'm working through it using the [walkthrough](docs/walkthrough.md).
+**How it was built:** I set the brief. Codex built the first version (0.1.0) in two sessions on 1–2 October 2026, including the code, tests, docs and screenshots. Claude (Anthropic's AI assistant, in Claude Code) made version 0.2.0 on 4–5 November 2026 at my request: fixing the ticket assignment bug and password hashing, adding sign-in throttling, pagination and field-level validation, separating the demo, adding backup tooling and tests, and rewriting these docs. Claude also made 0.2.1 (the browser demo's sandbox mode and a Windows download fix) on 5 November 2026. Those commits carry a `Co-Authored-By: Claude` trailer. I haven't changed the code myself yet; I'm working through it using the [walkthrough](docs/walkthrough.md).
 
 ![NexusDesk dashboard with ticket totals, two charts and recent activity](docs/screenshots/dashboard.png)
 
@@ -24,7 +24,19 @@ I wrote the brief myself as practice, for a fictional company called Northstar D
 
 **The ticket rule:** an Open ticket never has a technician, and every other status always has one. If you pick a technician on an Open ticket, the form switches the status to Assigned for you (and says so); the server enforces the same rule and explains it beside the field if the two don't match. Reopening returns a ticket to the queue unassigned, and earlier fixes stay in its history.
 
-## Try the demo (Windows)
+## Download and run the demo
+
+The [latest release](https://github.com/JamieP-205/NexusDesk/releases/latest) has `NexusDesk-0.2.1-demo.zip`. You need **Java 17 or newer** ([Eclipse Temurin](https://adoptium.net/) is a good choice; check with `java -version`). Extract the whole ZIP, then double-click **Start demo.cmd**, or open a terminal in the extracted folder and run:
+
+```
+java -jar nexusdesk-0.2.1.jar --demo
+```
+
+Your browser opens when it's ready. No administrator rights are needed. Demo data is kept in `%LOCALAPPDATA%\NexusDesk\demo` (on macOS/Linux, `~/.local/share/nexusdesk/demo`).
+
+If Windows shows **"An Application Control policy has blocked this file"**, Smart App Control is refusing the unsigned `.cmd` file because it came from the internet. Please don't switch Smart App Control off: use the `java` command above instead. [Why this happens](docs/windows-download.md).
+
+## Run from source (Windows)
 
 You need **Java 17 or newer** (`java -version` to check; [Eclipse Temurin 21](https://adoptium.net/) is a good choice). The Maven wrapper is included, and the first run needs internet access to download dependencies.
 
@@ -64,7 +76,7 @@ The first start creates that administrator if the database has no accounts. Sett
 ## Build and test
 
 ```powershell
-.\mvnw.cmd verify             # 72 tests: services, HTTP and security, concurrency, migrations, demo profile
+.\mvnw.cmd verify             # 83 tests: services, HTTP and security, concurrency, migrations, demo and hosted profiles
 python scripts\smoke_test.py  # packaged app over HTTP: sign-in, rules, throttling, paging, restart, backup/restore
 ```
 
@@ -80,7 +92,7 @@ Java 17+, Spring Boot 3.5, Spring MVC, Spring Security, Thymeleaf, Spring JDBC, 
 - `src/main/resources/templates/` and `static/` — the interface
 - `scripts/` — smoke test and backup tool
 
-[Walkthrough](docs/walkthrough.md) · [Deployment](docs/deployment.md) · [Security notes](SECURITY.md) · [Design and ER diagram](docs/design.md) · [Testing](docs/testing.md) · [Changelog](CHANGELOG.md) · [Build log](docs/dev-journal.md)
+[Walkthrough](docs/walkthrough.md) · [Browser demo](docs/hosted-demo.md) · [Windows download](docs/windows-download.md) · [Deployment](docs/deployment.md) · [Security notes](SECURITY.md) · [Design and ER diagram](docs/design.md) · [Testing](docs/testing.md) · [Changelog](CHANGELOG.md) · [Build log](docs/dev-journal.md)
 
 ## A closer look
 

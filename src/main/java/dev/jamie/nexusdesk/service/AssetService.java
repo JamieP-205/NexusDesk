@@ -20,7 +20,10 @@ public class AssetService {
             LEFT JOIN asset_assignments aa ON aa.asset_id=a.id AND aa.returned_at IS NULL
             LEFT JOIN users u ON u.id=aa.user_id
             """;
-    public AssetService(JdbcTemplate db, UserService users) { this.db = db; this.users = users; }
+    private final RecordLimits limits;
+    public AssetService(JdbcTemplate db, UserService users, org.springframework.beans.factory.ObjectProvider<RecordLimits> limits) {
+        this.db = db; this.users = users; this.limits = limits.getIfAvailable(() -> RecordLimits.NONE);
+    }
     public List<Asset> list(Account actor, Long owner) {
         if (!actor.isStaff()) owner = actor.id();
         return owner == null ? db.query(SELECT + " ORDER BY a.id DESC", MAPPER)
@@ -39,6 +42,7 @@ public class AssetService {
         var v = new Validation();
         Clean clean = validate(v, null, type, manufacturer, model, serial, purchaseDate);
         v.check();
+        limits.check("assets");
         db.update("INSERT INTO assets(type,manufacturer,model,serial_number,purchase_date) VALUES (?,?,?,?,?)",
                 type, clean.manufacturer(), clean.model(), clean.serial(), purchaseDate);
         return db.queryForObject("SELECT id FROM assets WHERE serial_number=?", Long.class, clean.serial());
