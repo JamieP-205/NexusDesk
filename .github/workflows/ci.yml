@@ -25,3 +25,25 @@ jobs:
         with:
           name: test-results-java-${{ matrix.java }}
           path: target/surefire-reports/
+
+  deploy-demo:
+    # Redeploys the public browser demo on Render once the checks above pass on main.
+    # Render can't watch this repo itself, so this asks it to deploy the commit that was just tested.
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: render-deploy
+      cancel-in-progress: true
+    steps:
+      - name: Ask Render to deploy this commit
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: srv-dbm62rt9fdbs73bv2a20
+        run: |
+          curl --fail-with-body --silent --show-error -X POST \
+            -H "Authorization: Bearer $RENDER_API_KEY" -H "Content-Type: application/json" \
+            -d "{\"commitId\": \"$GITHUB_SHA\"}" \
+            "https://api.render.com/v1/services/$SERVICE_ID/deploys" > deploy.json || { cat deploy.json; exit 1; }
+          python3 -c "import json; d = json.load(open('deploy.json')); print('Render deploy', d['id'], d['status'], 'for', d['commit']['id'][:7])"

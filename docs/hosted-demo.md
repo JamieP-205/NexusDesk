@@ -27,6 +27,8 @@ Nothing is written to disk. A restart empties everything and rebuilds the templa
 
 Free hosting has limits. After 15 minutes without visitors the service is stopped, and the next visitor waits about a minute while Render starts it again (and everyone's sandboxes are gone, as after any restart). The free plan has a small share of a CPU, so the demo is slower than running it locally. Per-visitor address limits stay off (`trusted-proxy-hops=0`) until the proxy chain has been checked; the overall limits still apply.
 
+The live demo updates itself: after the checks pass on `main`, the `deploy-demo` job in `.github/workflows/ci.yml` asks Render to deploy that commit, using a Render API key stored as the `RENDER_API_KEY` Actions secret. Pull requests never get the secret.
+
 To deploy your own copy: sign in to Render, choose **New > Blueprint**, and point it at this repository.
 
 ## Running it locally
