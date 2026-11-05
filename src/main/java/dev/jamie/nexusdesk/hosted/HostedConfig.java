@@ -1,5 +1,7 @@
 package dev.jamie.nexusdesk.hosted;
 
+import dev.jamie.nexusdesk.config.DemoData;
+import dev.jamie.nexusdesk.config.PasswordHashing;
 import dev.jamie.nexusdesk.config.ThrottleKey;
 import dev.jamie.nexusdesk.service.RecordLimits;
 import dev.jamie.nexusdesk.service.ValidationProblem;
@@ -18,6 +20,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * The public browser demo ("hosted" profile). Each visitor gets a private in-memory copy of the
@@ -54,6 +57,26 @@ public class HostedConfig {
             @Override public void sessionDestroyed(HttpSessionEvent event) {
                 registry.remove((String) event.getSession().getAttribute(SandboxFilter.SESSION_KEY));
             }
+        };
+    }
+
+    /**
+     * The template is re-seeded hourly with six accounts that all use the published demo password, and
+     * PBKDF2 at 600,000 iterations takes seconds of CPU on a small free host each time. That one public
+     * password is hashed once and reused; every other password is hashed normally with its own salt,
+     * and checking passwords is unchanged.
+     */
+    @Bean
+    @Primary
+    PasswordEncoder hostedPasswords() {
+        PasswordEncoder normal = PasswordHashing.encoder();
+        String demoHash = normal.encode(DemoData.PUBLIC_PASSWORD);
+        return new PasswordEncoder() {
+            @Override public String encode(CharSequence raw) {
+                return DemoData.PUBLIC_PASSWORD.contentEquals(raw) ? demoHash : normal.encode(raw);
+            }
+            @Override public boolean matches(CharSequence raw, String encoded) { return normal.matches(raw, encoded); }
+            @Override public boolean upgradeEncoding(String encoded) { return normal.upgradeEncoding(encoded); }
         };
     }
 
