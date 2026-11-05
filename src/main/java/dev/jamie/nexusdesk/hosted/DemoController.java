@@ -30,8 +30,11 @@ public class DemoController {
     private final AccountDetailsService accounts;
     private final HttpSessionSecurityContextRepository contexts = new HttpSessionSecurityContextRepository();
 
-    public DemoController(SandboxRegistry registry, UserService users, AccountDetailsService accounts) {
-        this.registry = registry; this.users = users; this.accounts = accounts;
+    private final int trustedHops;
+
+    public DemoController(SandboxRegistry registry, UserService users, AccountDetailsService accounts,
+                          @org.springframework.beans.factory.annotation.Value("${nexusdesk.hosted.trusted-proxy-hops:0}") int trustedHops) {
+        this.registry = registry; this.users = users; this.accounts = accounts; this.trustedHops = trustedHops;
     }
 
     @PostMapping("/demo/start")
@@ -79,14 +82,17 @@ public class DemoController {
     }
 
     /**
-     * A best-effort visitor key for the per-visitor limits: the first X-Forwarded-For address. A visitor can
-     * forge it to dodge their own limit, but never to use up anyone else's, which is the safer failure
-     * because the hosting proxy chain isn't under our control. The overall caps still apply.
+     * The visitor's address for the per-visitor limits, read from the hop the hosting proxy adds
+     * (nexusdesk.hosted.trusted-proxy-hops from the right of X-Forwarded-For). Entries a visitor writes
+     * themselves are never used, so nobody can claim someone else's address. With no trusted hop
+     * configured, this returns null and only the overall limits apply.
      */
-    private static String client(HttpServletRequest request) {
+    private String client(HttpServletRequest request) {
+        if (trustedHops < 1) return null;
         String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) return forwarded.split(",")[0].strip();
-        return request.getRemoteAddr();
+        if (forwarded == null || forwarded.isBlank()) return null;
+        String[] parts = forwarded.split(",");
+        return parts.length >= trustedHops ? parts[parts.length - trustedHops].strip() : null;
     }
 
     private String signIn(String role, HttpServletRequest request, HttpServletResponse response, RedirectAttributes flash) {

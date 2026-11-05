@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** The public browser demo: one private sandbox per visitor, with limits. */
-@SpringBootTest(properties = {"nexusdesk.hosted.max-sandboxes=6", "nexusdesk.hosted.creations-per-minute=100",
+@SpringBootTest(properties = {"nexusdesk.hosted.max-sandboxes=6", "nexusdesk.hosted.trusted-proxy-hops=1", "nexusdesk.hosted.creations-per-minute=100",
         "nexusdesk.hosted.max-tickets=27", "nexusdesk.hosted.max-rows=400", "server.servlet.session.cookie.secure=false"})
 @ActiveProfiles("hosted")
 @AutoConfigureMockMvc
@@ -179,8 +179,21 @@ class HostedDemoTest {
     @Test void oneAddressCantTakeEverySandbox() throws Exception {
         for (int i = 0; i < 6; i++) startFrom("10.8.0.1");
         mvc.perform(post("/demo/start").param("role", "employee").session(new MockHttpSession()).with(csrf())
-                        .header("X-Forwarded-For", "10.8.0.1, 10.0.0.2"))
+                        .header("X-Forwarded-For", "10.0.0.2, 10.8.0.1"))
                 .andExpect(flash().attribute("demoError", containsString("several demos")));
+    }
+
+    @Test void aForgedEarlierAddressCantUseUpSomeoneElsesQuota() throws Exception {
+        for (int i = 0; i < 4; i++) startFrom("10.6.0.1");
+        registry.removeAll();
+        // Someone else claims 10.6.0.1 at the front of the header; the proxy-added address is their own.
+        startFrom("10.6.0.1, 10.6.0.99");
+        startFrom("10.6.0.1, 10.6.0.98");
+        registry.removeAll();
+        // Had the forged entries counted, this would be 10.6.0.1's seventh start this minute and refused.
+        mvc.perform(post("/demo/start").param("role", "employee").session(new MockHttpSession()).with(csrf())
+                        .header("X-Forwarded-For", "10.6.0.1"))
+                .andExpect(redirectedUrl("/tickets"));
     }
 
     MockHttpSession startFrom(String address) throws Exception {

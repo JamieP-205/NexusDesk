@@ -105,21 +105,24 @@ public class SandboxRegistry {
         }
     }
 
-    public Sandbox create() { return create("unknown"); }
+    public Sandbox create() { return create(null); }
 
-    public Sandbox create(String client) {
+    /**
+     * Creates a sandbox. Checks and creation happen under one lock, so simultaneous starts can't exceed
+     * the caps. {@code client} is the visitor's proxy-reported address, or null when it isn't known, in
+     * which case only the overall limits apply.
+     */
+    public synchronized Sandbox create(String client) {
         Instant now = clock.instant();
-        synchronized (recentCreations) {
-            while (!recentCreations.isEmpty() && recentCreations.peekFirst().getKey().isBefore(now.minusSeconds(60))) recentCreations.removeFirst();
-            if (recentCreations.size() >= creationsPerMinute) throw new Busy("Lots of people are starting demos right now. Please try again in a minute.");
-            if (recentCreations.stream().filter(e -> e.getValue().equals(client)).count() >= CLIENT_STARTS_PER_MINUTE
-                    || owners.values().stream().filter(client::equals).count() >= CLIENT_LIVE) {
-                throw new Busy("You've started several demos in a short time. Please use the one you have, or try again in a minute.");
-            }
-            if (sandboxes.size() >= maxSandboxes) evictIdle(now);
-            if (sandboxes.size() >= maxSandboxes) throw new Busy("The demo is full right now. Please try again in a few minutes.");
-            recentCreations.addLast(Map.entry(now, client));
+        while (!recentCreations.isEmpty() && recentCreations.peekFirst().getKey().isBefore(now.minusSeconds(60))) recentCreations.removeFirst();
+        if (recentCreations.size() >= creationsPerMinute) throw new Busy("Lots of people are starting demos right now. Please try again in a minute.");
+        if (client != null && (recentCreations.stream().filter(e -> e.getValue().equals(client)).count() >= CLIENT_STARTS_PER_MINUTE
+                || owners.values().stream().filter(client::equals).count() >= CLIENT_LIVE)) {
+            throw new Busy("You've started several demos in a short time. Please use the one you have, or try again in a minute.");
         }
+        if (sandboxes.size() >= maxSandboxes) evictIdle(now);
+        if (sandboxes.size() >= maxSandboxes) throw new Busy("The demo is full right now. Please try again in a few minutes.");
+        recentCreations.addLast(Map.entry(now, client == null ? "" : client));
         String id = token();
         JdbcDataSource db = memory("sbx_" + id);
         try (Connection c = db.getConnection(); Statement s = c.createStatement()) {
@@ -130,7 +133,7 @@ public class SandboxRegistry {
         }
         Sandbox sandbox = new Sandbox(id, db, now);
         sandboxes.put(id, sandbox);
-        owners.put(id, client);
+        if (client != null) owners.put(id, client);
         return sandbox;
     }
 
