@@ -10,7 +10,8 @@ COPY src src
 RUN ./mvnw -B -q package -DskipTests && cp target/nexusdesk-*.jar /nexusdesk.jar
 
 FROM eclipse-temurin:21-jre
-RUN useradd --create-home --uid 1000 demo
+# The base image already has a user with ID 1000 (ubuntu), so the demo user gets its own.
+RUN useradd --create-home --uid 10001 demo
 COPY --from=build --chown=demo:demo /nexusdesk.jar /app/nexusdesk.jar
 USER demo
 # Heap and native memory sized to stay inside 512 MB. A local run with 60 visitors open used
