@@ -1266,3 +1266,71 @@ code {
 .role-list li {
   margin-bottom: 6px;
 }
+
+/* ---------- Motion ----------
+   Ease-out for things arriving, no bounce, nothing longer than a quarter of a second, and all of it
+   off when the device asks for reduced motion. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --enter: 200ms;
+  --exit: 160ms;
+}
+button,
+.button,
+.sidebar a {
+  transition: background-color 150ms var(--ease-out), border-color 150ms var(--ease-out),
+    color 150ms var(--ease-out), transform var(--exit) var(--ease-out);
+}
+/* Press feedback: a button dips to 97% while held. */
+button:active:not(:disabled),
+.button:active {
+  transform: scale(0.97);
+}
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+/* Messages arrive; a success message also gives one soft pulse to confirm the action worked. */
+@keyframes confirm {
+  from {
+    box-shadow: 0 0 0 0 rgb(27 100 78 / 35%);
+  }
+  to {
+    box-shadow: 0 0 0 10px rgb(27 100 78 / 0%);
+  }
+}
+.notice,
+.error-note {
+  animation: settle var(--enter) var(--ease-out) both;
+}
+.notice:not(.info):not(.warning) {
+  animation: settle var(--enter) var(--ease-out) both, confirm 600ms var(--ease-out) 120ms;
+}
+/* Ticket rows and checklist steps arrive 30 ms apart (only the first few, so long lists aren't slow). */
+.table-wrap tbody tr,
+.guide-steps li {
+  animation: settle var(--enter) var(--ease-out) both;
+}
+.table-wrap tbody tr:nth-child(2), .guide-steps li:nth-child(2) { animation-delay: 30ms; }
+.table-wrap tbody tr:nth-child(3), .guide-steps li:nth-child(3) { animation-delay: 60ms; }
+.table-wrap tbody tr:nth-child(4) { animation-delay: 90ms; }
+.table-wrap tbody tr:nth-child(5) { animation-delay: 120ms; }
+.table-wrap tbody tr:nth-child(6) { animation-delay: 150ms; }
+.table-wrap tbody tr:nth-child(n + 7) { animation-delay: 180ms; }
+/* Opening a details section (filters, Resolve this ticket, password sign-in) eases its contents in. */
+details[open] > :not(summary) {
+  animation: settle var(--enter) var(--ease-out);
+}
+.guide-mark {
+  transition: background-color 200ms var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Motion: buttons dip slightly when pressed, messages and ticket rows ease in (rows 30 ms apart), success messages give one soft pulse, and opened sections ease their contents in. All of it is off when the device asks for reduced motion.
+
 ## 0.2.2 — 5 November 2026
 
 Made by Claude (Anthropic's AI assistant) in Claude Code at Jamie's request, after Jamie found the roles hard to tell apart: the demo gave no hint of what each account could do, and the main actions were in a form at the bottom of each ticket.
