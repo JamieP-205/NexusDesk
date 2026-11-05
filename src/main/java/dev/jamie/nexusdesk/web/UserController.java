@@ -2,6 +2,7 @@ package dev.jamie.nexusdesk.web;
 
 import dev.jamie.nexusdesk.service.UserService;
 import dev.jamie.nexusdesk.service.ValidationProblem;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 import org.springframework.security.core.Authentication;
@@ -15,7 +16,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/users")
 public class UserController {
     private final UserService users;
-    public UserController(UserService users) { this.users = users; }
+    private final Guide guide;
+    public UserController(UserService users, Guide guide) { this.users = users; this.guide = guide; }
 
     @GetMapping
     String list(Model model) {
@@ -27,9 +29,11 @@ public class UserController {
     @PostMapping
     String create(Authentication auth, Model model, HttpServletResponse response, @RequestParam(defaultValue="") String name,
                   @RequestParam(defaultValue="") String email, @RequestParam(defaultValue="") String role,
-                  @RequestParam(defaultValue="") String password, RedirectAttributes flash) {
+                  @RequestParam(defaultValue="") String password, RedirectAttributes flash, HttpServletRequest request) {
         try {
-            users.create(users.current(auth), name, email, role, password);
+            var me = users.current(auth);
+            users.create(me, name, email, role, password);
+            guide.done(request, me, "account");
             flash.addFlashAttribute("success", "Account created for " + name.strip() + ". Share the password with them securely.");
             return "redirect:/users";
         } catch (ValidationProblem problem) {
@@ -53,9 +57,12 @@ public class UserController {
     String update(Authentication auth, @PathVariable long id, Model model, HttpServletResponse response,
                   @RequestParam(defaultValue="") String name, @RequestParam(defaultValue="") String email,
                   @RequestParam(defaultValue="") String role, @RequestParam(defaultValue="false") boolean enabled,
-                  RedirectAttributes flash) {
+                  RedirectAttributes flash, HttpServletRequest request) {
         try {
-            users.edit(users.current(auth), id, name, email, role, enabled);
+            var me = users.current(auth);
+            var before = users.find(id);
+            users.edit(me, id, name, email, role, enabled);
+            if (!before.role().equals(role) || before.enabled() != enabled) guide.done(request, me, "access");
             flash.addFlashAttribute("success", "Account updated for " + name.strip() + ".");
             return "redirect:/users";
         } catch (ValidationProblem problem) {

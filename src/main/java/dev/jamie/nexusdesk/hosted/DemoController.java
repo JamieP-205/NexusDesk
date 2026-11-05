@@ -31,10 +31,11 @@ public class DemoController {
     private final HttpSessionSecurityContextRepository contexts = new HttpSessionSecurityContextRepository();
 
     private final int trustedHops;
+    private final dev.jamie.nexusdesk.web.Guide guide;
 
-    public DemoController(SandboxRegistry registry, UserService users, AccountDetailsService accounts,
+    public DemoController(SandboxRegistry registry, UserService users, AccountDetailsService accounts, dev.jamie.nexusdesk.web.Guide guide,
                           @org.springframework.beans.factory.annotation.Value("${nexusdesk.hosted.trusted-proxy-hops:0}") int trustedHops) {
-        this.registry = registry; this.users = users; this.accounts = accounts; this.trustedHops = trustedHops;
+        this.registry = registry; this.users = users; this.accounts = accounts; this.guide = guide; this.trustedHops = trustedHops;
     }
 
     @PostMapping("/demo/start")
@@ -77,6 +78,7 @@ public class DemoController {
         request.getSession().setAttribute(SandboxFilter.SESSION_KEY, fresh.id());
         registry.remove(old.id());
         SandboxContext.bind(fresh);
+        guide.clear(request);
         flash.addFlashAttribute("info", "Your demo has been reset to the original fictional data.");
         return signIn(LANDING.containsKey(role) ? role : "employee", request, response, flash);
     }

@@ -3,6 +3,7 @@ package dev.jamie.nexusdesk.web;
 import dev.jamie.nexusdesk.model.Account;
 import dev.jamie.nexusdesk.model.Ticket;
 import dev.jamie.nexusdesk.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 import java.util.*;
@@ -20,8 +21,9 @@ public class TicketController {
     private final TicketService tickets;
     private final UserService users;
     private final int pageSize;
-    public TicketController(TicketService tickets, UserService users, @Value("${nexusdesk.tickets.page-size:20}") int pageSize) {
-        this.tickets = tickets; this.users = users; this.pageSize = pageSize;
+    private final Guide guide;
+    public TicketController(TicketService tickets, UserService users, Guide guide, @Value("${nexusdesk.tickets.page-size:20}") int pageSize) {
+        this.tickets = tickets; this.users = users; this.guide = guide; this.pageSize = pageSize;
     }
 
     @GetMapping
@@ -97,9 +99,11 @@ public class TicketController {
     @PostMapping
     String create(Authentication auth, Model model, HttpServletResponse response, @RequestParam(defaultValue="") String title,
                   @RequestParam(defaultValue="") String description, @RequestParam(defaultValue="") String category,
-                  @RequestParam(defaultValue="") String priority, RedirectAttributes flash) {
+                  @RequestParam(defaultValue="") String priority, RedirectAttributes flash, HttpServletRequest request) {
         try {
-            long id = tickets.create(users.current(auth), title, description, category, priority);
+            var me = users.current(auth);
+            long id = tickets.create(me, title, description, category, priority);
+            guide.done(request, me, "raise");
             flash.addFlashAttribute("success", "Ticket ND-" + id + " created. IT can now pick it up.");
             return "redirect:/tickets/" + id;
         } catch (ValidationProblem problem) {
@@ -143,10 +147,12 @@ public class TicketController {
                   @RequestParam(defaultValue="") String priority, @RequestParam(required=false) Long assignee,
                   @RequestParam(defaultValue="") String resolution, @RequestParam(required=false) String seenStatus,
                   @RequestParam(required=false) String seenPriority, @RequestParam(required=false) Long seenAssignee,
-                  RedirectAttributes flash) {
+                  RedirectAttributes flash, HttpServletRequest request) {
         var me = users.current(auth);
         try {
             var changes = tickets.update(me, id, version, status, priority, assignee, resolution);
+            if (!changes.isEmpty() && status.equals("Resolved")) guide.done(request, me, "resolve");
+            if (!changes.isEmpty() && Objects.equals(assignee, me.id()) && !Objects.equals(seenAssignee, me.id())) guide.done(request, me, "take");
             if (changes.isEmpty()) flash.addFlashAttribute("info", "Nothing changed, so there was nothing to save.");
             else flash.addFlashAttribute("success", "Saved: " + String.join("; ", changes) + ".");
             return "redirect:/tickets/" + id;
@@ -189,10 +195,11 @@ public class TicketController {
 
     @PostMapping("/{id}/comments")
     String comment(Authentication auth, @PathVariable long id, Model model, HttpServletResponse response,
-                   @RequestParam(defaultValue="") String body, RedirectAttributes flash) {
+                   @RequestParam(defaultValue="") String body, RedirectAttributes flash, HttpServletRequest request) {
         var me = users.current(auth);
         try {
             tickets.comment(me, id, body);
+            guide.done(request, me, "comment");
             flash.addFlashAttribute("success", "Comment added.");
             return "redirect:/tickets/" + id + "#conversation";
         } catch (ValidationProblem problem) {
@@ -207,5 +214,63 @@ public class TicketController {
             model.addAttribute("formResolution", ticket.resolution());
             return "ticket-detail";
         }
+    }
+
+    // --- Quick actions: one-press versions of the common steps, with the same rules as the full form ---
+
+    @PostMapping("/{id}/take")
+    String take(Authentication auth, @PathVariable long id, @RequestParam int version, RedirectAttributes flash, HttpServletRequest request) {
+        var me = users.current(auth);
+        return quick(id, flash, () -> {
+            tickets.take(me, id, version);
+            guide.done(request, me, "take");
+            flash.addFlashAttribute("success", "It's yours. The ticket is now assigned to you.");
+        });
+    }
+
+    @PostMapping("/{id}/resolve")
+    String resolve(Authentication auth, @PathVariable long id, @RequestParam int version, @RequestParam(defaultValue="") String resolution,
+                   RedirectAttributes flash, HttpServletRequest request) {
+        var me = users.current(auth);
+        return quick(id, flash, () -> {
+            tickets.resolve(me, id, version, resolution);
+            guide.done(request, me, "resolve");
+            flash.addFlashAttribute("success", "Marked Resolved. The person who raised it can now confirm it's fixed or reopen it.");
+        });
+    }
+
+    @PostMapping("/{id}/confirm")
+    String confirm(Authentication auth, @PathVariable long id, @RequestParam int version, RedirectAttributes flash, HttpServletRequest request) {
+        var me = users.current(auth);
+        return quick(id, flash, () -> {
+            tickets.confirmFixed(me, id, version);
+            guide.done(request, me, "confirm");
+            flash.addFlashAttribute("success", "Thanks for confirming. The ticket is now Closed.");
+        });
+    }
+
+    @PostMapping("/{id}/reopen")
+    String reopen(Authentication auth, @PathVariable long id, @RequestParam int version, @RequestParam(defaultValue="") String reason,
+                  RedirectAttributes flash, HttpServletRequest request) {
+        var me = users.current(auth);
+        return quick(id, flash, () -> {
+            tickets.reopen(me, id, version, reason);
+            guide.done(request, me, "confirm");
+            flash.addFlashAttribute("success", "Reopened. It's back in IT's queue with your comment.");
+        });
+    }
+
+    /** Runs a quick action and returns to the ticket, with the reason in a message if it couldn't be done. */
+    private static String quick(long id, RedirectAttributes flash, Runnable action) {
+        try {
+            action.run();
+        } catch (ValidationProblem problem) {
+            flash.addFlashAttribute("error", String.join(" ", problem.fields().values()));
+        } catch (Problem problem) {
+            if (problem.status() == 404 || problem.status() == 403) throw problem;
+            flash.addFlashAttribute("error", problem.isConflict()
+                    ? problem.getMessage() + " The page now shows the latest version." : problem.getMessage());
+        }
+        return "redirect:/tickets/" + id;
     }
 }

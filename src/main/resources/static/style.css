@@ -1179,3 +1179,90 @@ code {
     margin-top: 12px;
   }
 }
+
+/* Demo checklist ("Things to try") and quick actions on a ticket. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.guide {
+  margin-bottom: 22px;
+  border-left: 4px solid var(--accent);
+}
+.guide > .section-heading {
+  padding: 0;
+}
+.guide > p {
+  margin: 6px 0 12px;
+}
+.guide-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.guide-steps li {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.guide-steps li p {
+  margin: 2px 0 0;
+}
+.guide-steps a {
+  font-weight: 600;
+}
+.guide-mark {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--white);
+}
+.guide-steps li.done .guide-mark {
+  background: var(--accent);
+}
+.guide-journey {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.quick-actions {
+  border-left: 4px solid var(--accent);
+}
+.quick-actions h2 {
+  margin-bottom: 4px;
+}
+.quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 4px;
+}
+.quick-row form {
+  margin: 0;
+}
+.quick-resolve {
+  margin-top: 10px;
+}
+.quick-resolve summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent);
+}
+.quick-resolve form {
+  margin-top: 10px;
+}
+.role-list li {
+  margin-bottom: 6px;
+}

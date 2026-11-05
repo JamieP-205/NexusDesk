@@ -27,6 +27,76 @@
       <div th:replace="~{fragments :: notice}"></div>
       <div class="detail-grid">
         <div class="stack">
+          <section
+            class="panel padded quick-actions"
+            th:if="${me.isStaff() and ticket.status != 'Resolved' and ticket.status != 'Closed'}"
+            aria-labelledby="quick-heading"
+          >
+            <h2 id="quick-heading">Next step</h2>
+            <p class="small muted" th:if="${ticket.status == 'Open'}">
+              Nobody is working on this yet. Pick it up to start.
+            </p>
+            <p class="small muted" th:if="${ticket.status != 'Open' and ticket.assigneeId == me.id}">
+              You're working on this. When it's fixed, say what fixed it.
+            </p>
+            <p class="small muted" th:if="${ticket.status != 'Open' and ticket.assigneeId != me.id}"
+               th:text="${ticket.assigneeName} + ' is working on this. You can take it over, or resolve it if it is fixed.'"></p>
+            <div class="quick-row" th:if="${ticket.assigneeId != me.id}">
+              <form th:action="@{/tickets/{id}/take(id=${ticket.id})}" method="post">
+                <input type="hidden" name="version" th:value="${ticket.version}" />
+                <button type="submit" th:classappend="${ticket.status == 'Open'} ? 'primary'">Assign to me</button>
+              </form>
+            </div>
+            <details class="quick-resolve" th:if="${ticket.status != 'Open'}" th:open="${ticket.assigneeId == me.id}">
+              <summary>Resolve this ticket</summary>
+              <form th:action="@{/tickets/{id}/resolve(id=${ticket.id})}" method="post">
+                <input type="hidden" name="version" th:value="${ticket.version}" />
+                <label>What fixed it?<textarea name="resolution" required maxlength="3000" rows="3"
+                  placeholder="e.g. Replaced the network cable and checked the connection."></textarea></label>
+                <button class="primary" type="submit">Mark resolved</button>
+              </form>
+            </details>
+          </section>
+          <section
+            class="panel padded quick-actions"
+            th:if="${ticket.creatorId == me.id and ticket.status == 'Resolved'}"
+            aria-labelledby="fixed-heading"
+          >
+            <h2 id="fixed-heading">Is it fixed?</h2>
+            <p class="small muted">
+              IT marked this ticket resolved. Confirm it's fixed to close it, or
+              reopen it if the problem is still there.
+            </p>
+            <div class="quick-row">
+              <form th:action="@{/tickets/{id}/confirm(id=${ticket.id})}" method="post">
+                <input type="hidden" name="version" th:value="${ticket.version}" />
+                <button class="primary" type="submit">Yes, it's fixed</button>
+              </form>
+            </div>
+            <details class="quick-resolve">
+              <summary>No, it's still not working</summary>
+              <form th:action="@{/tickets/{id}/reopen(id=${ticket.id})}" method="post">
+                <input type="hidden" name="version" th:value="${ticket.version}" />
+                <label>What's still wrong?<textarea name="reason" required maxlength="3000" rows="3"></textarea></label>
+                <button type="submit">Reopen ticket</button>
+              </form>
+            </details>
+          </section>
+          <section
+            class="panel padded quick-actions"
+            th:if="${ticket.creatorId == me.id and ticket.status == 'Closed'}"
+            aria-labelledby="back-heading"
+          >
+            <h2 id="back-heading">Problem back?</h2>
+            <details class="quick-resolve">
+              <summary>Reopen this ticket</summary>
+              <form th:action="@{/tickets/{id}/reopen(id=${ticket.id})}" method="post">
+                <input type="hidden" name="version" th:value="${ticket.version}" />
+                <label>What's wrong now?<textarea name="reason" required maxlength="3000" rows="3"></textarea></label>
+                <button type="submit">Reopen ticket</button>
+              </form>
+            </details>
+          </section>
           <section class="panel padded">
             <h2>The problem</h2>
             <p class="preserve" th:text="${ticket.description}"></p>
@@ -72,7 +142,7 @@
             </form>
             <p class="muted" th:if="${ticket.status == 'Closed'}">
               This ticket is closed.
-              <span th:text="${me.isStaff() ? 'Reopen it from Update ticket if the problem returns.' : 'If the problem returns, ask IT to reopen it or create a new ticket.'}"></span>
+              <span th:text="${ticket.creatorId == me.id ? 'If the problem returns, reopen it above.' : 'Reopen it from Update ticket if the problem returns.'}"></span>
             </p>
           </section>
           <section class="panel padded">

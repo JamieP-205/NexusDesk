@@ -1,9 +1,15 @@
 # Changelog
 
-## Unreleased (browser demo only)
+## 0.2.2 — 5 November 2026
 
-Made by Claude (Anthropic's AI assistant) in Claude Code at Jamie's request.
+Made by Claude (Anthropic's AI assistant) in Claude Code at Jamie's request, after Jamie found the roles hard to tell apart: the demo gave no hint of what each account could do, and the main actions were in a form at the bottom of each ticket.
 
+**Added**
+- Quick actions on a ticket. Technicians get **Assign to me** and **Resolve this ticket**; the person who raised a Resolved ticket gets **Yes, it's fixed** (closes it) or **No, it's still not working** (reopens it with their reason as a comment). They follow the same rules, history and conflict check as the full Update ticket form.
+- A **Things to try** checklist for each role in the local and browser demos, ticking off as you go, plus a suggested journey across roles. The normal app doesn't show it.
+- The sign-in page now says what each role can do.
+
+**Browser demo**
 - The browser demo now runs on Render's free plan (`render.yaml`); Hugging Face Docker Spaces need a paid plan.
 - Fixed: in the browser demo, opening a page you weren't allowed to see, or one that didn't exist, signed you out and deleted your copy of the data. Error pages are rendered in a second pass that didn't see the visitor's sandbox.
 - The browser demo hashes the published demo password once when preparing its data, instead of six times an hour.

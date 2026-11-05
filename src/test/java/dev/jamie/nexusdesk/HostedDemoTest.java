@@ -212,4 +212,32 @@ class HostedDemoTest {
                 .with(csrf()).header("X-Forwarded-For", address)).andReturn().getRequest().getSession(false);
     }
 
+
+    @Test void eachRoleGetsAChecklistThatTicksOffAndSurvivesSwitching() throws Exception {
+        var visitor = start("employee");
+        assertThat(page(visitor, "/tickets")).contains("Things to try as an employee").contains("0 of 3 done");
+        createTicket(visitor, "Checklist ticket");
+        assertThat(page(visitor, "/tickets")).contains("1 of 3 done");
+
+        var tech = (MockHttpSession) mvc.perform(post("/demo/switch").param("role", "technician").session(visitor).with(csrf()))
+                .andReturn().getRequest().getSession(false);
+        assertThat(page(tech, "/")).contains("Things to try as an IT technician").contains("0 of 3 done");
+        var admin = (MockHttpSession) mvc.perform(post("/demo/switch").param("role", "admin").session(tech).with(csrf()))
+                .andReturn().getRequest().getSession(false);
+        assertThat(page(admin, "/")).contains("Things to try as an administrator");
+
+        var back = (MockHttpSession) mvc.perform(post("/demo/switch").param("role", "employee").session(admin).with(csrf()))
+                .andReturn().getRequest().getSession(false);
+        assertThat(page(back, "/tickets")).contains("1 of 3 done");
+        // Reset starts the checklist again along with the data.
+        var after = (MockHttpSession) mvc.perform(post("/demo/reset").param("role", "employee").session(back).with(csrf()))
+                .andReturn().getRequest().getSession(false);
+        assertThat(page(after, "/tickets")).contains("0 of 3 done");
+    }
+
+    @Test void theRoleButtonsSayWhatEachRoleCanDo() throws Exception {
+        mvc.perform(get("/login")).andExpect(content().string(containsString("Raise tickets, reply, and close or reopen your own")))
+                .andExpect(content().string(containsString("Every ticket: pick them up, update and resolve them")))
+                .andExpect(content().string(containsString("Everything IT can do, plus accounts, roles and equipment")));
+    }
 }

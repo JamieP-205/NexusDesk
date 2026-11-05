@@ -19,6 +19,7 @@
         <a class="button primary" href="/tickets/new">+ New ticket</a>
       </header>
       <div th:replace="~{fragments :: notice}"></div>
+      <th:block th:unless="${me.isStaff()}"><section th:replace="~{fragments :: guide}"></section></th:block>
       <form class="panel filters" action="/tickets" method="get">
         <label class="search-field"
           >Search titles<input

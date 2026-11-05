@@ -33,7 +33,7 @@ To deploy your own copy: sign in to Render, choose **New > Blueprint**, and poin
 
 ```powershell
 .\mvnw.cmd package -DskipTests
-java -jar target\nexusdesk-0.2.1.jar --spring.profiles.active=hosted --server.servlet.session.cookie.secure=false
+java -jar target\nexusdesk-0.2.2.jar --spring.profiles.active=hosted --server.servlet.session.cookie.secure=false
 ```
 
 Then open http://localhost:7860. (The cookie override is only for plain-HTTP testing on your own machine.) `HostedDemoTest` covers isolation, role switching, reset, expiry, limits, throttling and capacity.

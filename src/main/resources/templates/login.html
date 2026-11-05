@@ -31,7 +31,7 @@
             <input type="hidden" name="role" th:value="${r}" />
             <button class="full" type="submit" th:classappend="${r == 'employee'} ? 'primary'">
               <span th:text="${r == 'admin' ? 'Administrator' : (r == 'technician' ? 'IT technician' : 'Employee')}"></span>
-              <small th:text="${r == 'admin' ? 'Accounts, equipment and the full queue' : (r == 'technician' ? 'Work the ticket queue' : 'Raise and follow your own tickets')}"></small>
+              <small th:text="${r == 'admin' ? 'Everything IT can do, plus accounts, roles and equipment' : (r == 'technician' ? 'Every ticket: pick them up, update and resolve them' : 'Raise tickets, reply, and close or reopen your own')}"></small>
             </button>
           </form>
         </section>
@@ -93,11 +93,12 @@
             Fictional data for trying the app. Every account uses the public
             password <code>Demo-password-123</code>.
           </p>
-          <ul class="small">
-            <li><code>admin@example.test</code> administrator</li>
-            <li><code>tech@example.test</code> IT technician</li>
-            <li><code>employee@example.test</code> employee</li>
+          <ul class="small role-list">
+            <li><code>employee@example.test</code> employee: raises tickets, replies, and closes or reopens their own. Sees only their own tickets and equipment.</li>
+            <li><code>tech@example.test</code> IT technician: sees every ticket, picks them up, updates and resolves them.</li>
+            <li><code>admin@example.test</code> administrator: everything IT can do, plus accounts, roles and equipment.</li>
           </ul>
+          <p class="small">After you sign in, a checklist shows what to try with that account.</p>
         </section>
       </section>
     </main>

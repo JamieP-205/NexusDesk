@@ -2,6 +2,14 @@
 
 The checks below were run by the AI tools that built each version, not by me. I'll add my own results at the end as I go.
 
+## Version 0.2.2 (Claude, 5 November 2026)
+
+| Check | Result |
+| --- | --- |
+| `.\mvnw.cmd verify` | 96 tests, 0 failures (new: quick actions and their permissions, requester confirm/reopen, conflict check, checklist in both demo profiles, error pages in the browser demo) |
+| `python scripts\smoke_test.py` | PASS |
+| Browser demo run locally | Employee confirmed a resolved ticket (checklist went to 1 of 3); technician used Assign to me and saw the resolve form; screenshots checked at desktop width |
+
 ## Version 0.2.1 (Claude, 5 November 2026)
 
 Same machine and tools as 0.2.0.

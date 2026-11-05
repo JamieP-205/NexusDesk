@@ -174,6 +174,78 @@ public class TicketService {
 
     private static String nameOr(String name) { return name == null ? "Unassigned" : name; }
 
+    /**
+     * "Assign to me": a technician picks up a ticket that isn't finished. An Open ticket becomes
+     * Assigned; one that's already being worked on keeps its status and changes hands. Uses
+     * {@link #update}, so the same rules, history and conflict check apply.
+     */
+    @Transactional
+    public List<String> take(Account actor, long id, int version) {
+        Rules.staff(actor);
+        Ticket ticket = get(actor, id);
+        if (TicketFlow.isFinished(ticket.status())) {
+            throw Problem.invalid("This ticket is " + ticket.status() + ". Reopen it from Update ticket before picking it up.");
+        }
+        if (Objects.equals(ticket.assigneeId(), actor.id())) throw Problem.invalid("This ticket is already assigned to you.");
+        String status = ticket.status().equals("Open") ? "Assigned" : ticket.status();
+        return update(actor, id, version, status, ticket.priority(), actor.id(), "");
+    }
+
+    /** A technician marks a ticket they're working on as Resolved, saying what fixed it. */
+    @Transactional
+    public List<String> resolve(Account actor, long id, int version, String resolution) {
+        Rules.staff(actor);
+        Ticket ticket = get(actor, id);
+        if (ticket.status().equals("Open")) throw Problem.invalid("Assign this ticket before resolving it.");
+        if (TicketFlow.isFinished(ticket.status())) throw Problem.invalid("This ticket is already " + ticket.status() + ".");
+        return update(actor, id, version, "Resolved", ticket.priority(), ticket.assigneeId(), resolution);
+    }
+
+    /** The person who raised a Resolved ticket confirms the fix worked, which closes it. */
+    @Transactional
+    public void confirmFixed(Account actor, long id, int version) {
+        Ticket ticket = lockOwn(actor, id);
+        if (!ticket.status().equals("Resolved")) throw Problem.invalid("Only a Resolved ticket can be confirmed as fixed.");
+        if (ticket.version() != version) throw Problem.conflict(STALE);
+        int changed = db.update("UPDATE tickets SET status='Closed',updated_at=CURRENT_TIMESTAMP,version=version+1 WHERE id=? AND version=?",
+                id, version);
+        if (changed != 1) throw Problem.conflict(STALE);
+        history(id, actor, "Status: Resolved → Closed (the requester confirmed it's fixed)");
+    }
+
+    /**
+     * The person who raised a Resolved or Closed ticket says it still isn't fixed. Like reopening from
+     * Update ticket, it goes back to the queue as Open and unassigned, and the earlier resolution stays
+     * in the history. Their reason is posted as a comment so IT can see what's wrong.
+     */
+    @Transactional
+    public void reopen(Account actor, long id, int version, String reason) {
+        Ticket ticket = lockOwn(actor, id);
+        if (!TicketFlow.isFinished(ticket.status())) throw Problem.invalid("Only a Resolved or Closed ticket can be reopened.");
+        var v = new Validation();
+        String clean = v.text("reason", reason, "What's still wrong", 3000);
+        v.check();
+        if (ticket.version() != version) throw Problem.conflict(STALE);
+        limits.check("comments");
+        int changed = db.update("""
+                UPDATE tickets SET status='Open',assignee_id=NULL,resolution=NULL,resolved_at=NULL,
+                updated_at=CURRENT_TIMESTAMP,version=version+1 WHERE id=? AND version=?
+                """, id, version);
+        if (changed != 1) throw Problem.conflict(STALE);
+        db.update("INSERT INTO comments(ticket_id,author_id,body) VALUES (?,?,?)", id, actor.id(), clean);
+        history(id, actor, "Status: " + ticket.status() + " → Open (reopened by the requester)");
+        history(id, actor, "Assigned technician: " + nameOr(ticket.assigneeName()) + " → Unassigned");
+        history(id, actor, "Added a comment");
+    }
+
+    /** Locks a ticket and checks that the actor raised it. Anyone else gets the same "not found" as a missing ticket. */
+    private Ticket lockOwn(Account actor, long id) {
+        db.queryForList("SELECT id FROM tickets WHERE id=? FOR UPDATE", id);
+        Ticket ticket = get(actor, id);
+        if (ticket.creatorId() != actor.id()) throw Problem.missing();
+        return ticket;
+    }
+
     @Transactional
     public void comment(Account actor, long id, String body) {
         db.queryForList("SELECT id FROM tickets WHERE id=? FOR UPDATE", id);
