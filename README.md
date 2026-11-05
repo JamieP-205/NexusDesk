@@ -64,7 +64,7 @@ The demo uses fictional people, tickets and equipment in its own file, `data/nex
 
 On macOS or Linux: `./mvnw spring-boot:run -Dspring-boot.run.profiles=demo`.
 
-A 40-second [walkthrough video](docs/demo/walkthrough.mp4) shows an employee raising a ticket (including a validation error), a technician assigning and resolving it, the paginated queue, and an administrator assigning and returning equipment.
+A 99-second [walkthrough video](docs/demo/walkthrough.mp4) follows an employee raising a ticket, a technician taking and resolving it, and the employee confirming the fix. It then shows an administrator assigning and returning equipment. Typing, pointer movement and scrolling are visible throughout.
 
 ## Start with your own empty database
 
