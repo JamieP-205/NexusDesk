@@ -15,5 +15,9 @@
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.springframework.security</groupId><artifactId>spring-security-test</artifactId><scope>test</scope></dependency>
   </dependencies>
-  <build><plugins><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin></plugins></build>
+  <build><plugins><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId>
+    <!-- spring-boot:run normally adds -XX:TieredStopAtLevel=1 for a faster start, which made each
+         PBKDF2 password check about ten times slower (around 2 seconds per sign-in). -->
+    <configuration><optimizedLaunch>false</optimizedLaunch></configuration>
+  </plugin></plugins></build>
 </project>

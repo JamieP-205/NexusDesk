@@ -9,16 +9,12 @@ where java >nul 2>nul || (
   exit /b 1
 )
 if /i "%~1"=="--reset" (
-  rem Only the demo file is touched. The normal database is data
-exusdesk.mv.db and is left alone.
-  if exist "data
-exusdesk-demo.mv.db" del "data
-exusdesk-demo.mv.db"
-  if exist "data
-exusdesk-demo.trace.db" del "data
-exusdesk-demo.trace.db"
+  rem Only the demo file is touched. The normal database, data\nexusdesk.mv.db, is left alone.
+  if exist "data\nexusdesk-demo.mv.db" del "data\nexusdesk-demo.mv.db"
+  if exist "data\nexusdesk-demo.trace.db" del "data\nexusdesk-demo.trace.db"
   echo Demo database reset.
 )
-echo Starting the NexusDesk demo. Open http://localhost:8080 when you see "Started NexusDeskApplication".
+echo Starting the NexusDesk demo. Open http://localhost:8080 once you see "Started NexusDeskApplication".
+echo The first run also builds the fictional data; sign in after "Created fictional demo data" appears.
 echo Press Ctrl+C to stop.
-call mvnw.cmd -q spring-boot:run "-Dspring-boot.run.profiles=demo"
+call "%~dp0mvnw.cmd" -q spring-boot:run "-Dspring-boot.run.profiles=demo"

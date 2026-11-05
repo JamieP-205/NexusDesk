@@ -141,7 +141,9 @@ public class TicketController {
     String update(Authentication auth, @PathVariable long id, Model model, HttpServletResponse response,
                   @RequestParam int version, @RequestParam(defaultValue="") String status,
                   @RequestParam(defaultValue="") String priority, @RequestParam(required=false) Long assignee,
-                  @RequestParam(defaultValue="") String resolution, RedirectAttributes flash) {
+                  @RequestParam(defaultValue="") String resolution, @RequestParam(required=false) String seenStatus,
+                  @RequestParam(required=false) String seenPriority, @RequestParam(required=false) Long seenAssignee,
+                  RedirectAttributes flash) {
         var me = users.current(auth);
         try {
             var changes = tickets.update(me, id, version, status, priority, assignee, resolution);
@@ -153,8 +155,28 @@ public class TicketController {
             model.addAttribute("errors", problem.fields());
         } catch (Problem problem) {
             if (!problem.isConflict()) throw problem;
+            // Someone saved first. Show their version, and carry over only the fields this person
+            // actually changed, so saving again can't quietly undo the other person's work.
             response.setStatus(409);
-            model.addAttribute("error", problem.getMessage() + " The page now shows their changes. Your choices are still in the form: check them and save again.");
+            var latest = tickets.get(me, id);
+            boolean known = seenStatus != null && seenPriority != null;
+            String keepStatus = known && status.equals(seenStatus) ? latest.status() : status;
+            String keepPriority = known && priority.equals(seenPriority) ? latest.priority() : priority;
+            Long keepAssignee = known && Objects.equals(assignee, seenAssignee) ? latest.assigneeId() : assignee;
+            var kept = new ArrayList<String>();
+            if (!keepStatus.equals(latest.status())) kept.add("status " + keepStatus);
+            if (!keepPriority.equals(latest.priority())) kept.add("priority " + keepPriority);
+            if (!Objects.equals(keepAssignee, latest.assigneeId())) kept.add("technician");
+            if (!resolution.isBlank() && !resolution.strip().equals(Objects.toString(latest.resolution(), "").strip())) kept.add("resolution notes");
+            model.addAttribute("error", problem.getMessage() + " The page now shows their changes."
+                    + (kept.isEmpty() ? " Make your change again if it's still needed."
+                       : " Your edits (" + String.join(", ", kept) + ") are still in the form: check them and save again."));
+            detailModel(me, latest, model);
+            model.addAttribute("formStatus", keepStatus);
+            model.addAttribute("formPriority", keepPriority);
+            model.addAttribute("formAssignee", keepAssignee);
+            model.addAttribute("formResolution", resolution.isBlank() ? latest.resolution() : resolution);
+            return "ticket-detail";
         }
         // Re-show the page with what the person chose, so nothing they typed is lost.
         detailModel(me, tickets.get(me, id), model);

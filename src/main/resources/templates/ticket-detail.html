@@ -119,6 +119,10 @@
                 name="version"
                 th:value="${ticket.version}"
               />
+              <!-- What this form showed when it was opened, so a conflict can tell your changes from theirs. -->
+              <input type="hidden" name="seenStatus" th:value="${ticket.status}" />
+              <input type="hidden" name="seenPriority" th:value="${ticket.priority}" />
+              <input type="hidden" name="seenAssignee" th:value="${ticket.assigneeId}" />
               <label
                 >Status<select id="status" name="status"
                   th:aria-invalid="${errors['status'] != null} ? 'true'"

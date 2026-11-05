@@ -71,10 +71,10 @@
     </th:block>
     <p
       th:fragment="fieldError(name)"
-      th:if="${errors[name] != null}"
+      th:if="${errors.get(name) != null}"
       class="field-error"
       th:id="${name + '-error'}"
-      th:text="${errors[name]}"
+      th:text="${errors.get(name)}"
     ></p>
     <nav
       th:fragment="pagination(pager, links)"

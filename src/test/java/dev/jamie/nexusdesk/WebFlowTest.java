@@ -178,6 +178,7 @@ class WebFlowTest {
                         .param("description", "My <b>monitor</b> flickers").param("category", "Hardware").param("priority", "High"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("Title is required.")))
+                .andExpect(content().string(matchesPattern(java.util.regex.Pattern.compile("(?s).*id=\"title-error\"\\s*>Title is required\\.</p>.*"))))
                 .andExpect(content().string(containsString("aria-invalid=\"true\"")))
                 .andExpect(content().string(containsString("My &lt;b&gt;monitor&lt;/b&gt; flickers")))
                 .andExpect(content().string(selectedOption(">High<")));
@@ -213,11 +214,30 @@ class WebFlowTest {
                 .andExpect(content().string(matchesPattern(java.util.regex.Pattern.compile("(?s).*name=\"version\"\\s*value=\"1\".*"))));
         assertThat(tickets.get(admin, id).priority()).isEqualTo("Low");
     }
+    @Test void aConflictKeepsOnlyMyChangesNotTheStaleValues() throws Exception {
+        long id = tickets.create(alex, "Laptop", "Details", "Hardware", "Low");
+        tickets.update(tech, id, 0, "Assigned", "Low", tech.id(), "");
+        // Someone else raises the priority while I'm looking at version 1...
+        tickets.update(admin, id, 1, "Assigned", "Critical", tech.id(), "");
+        // ...and I only change the status, from the page I opened before their save.
+        mvc.perform(post("/tickets/" + id).with(as(tech)).with(csrf()).param("version", "1")
+                        .param("seenStatus", "Assigned").param("seenPriority", "Low").param("seenAssignee", String.valueOf(tech.id()))
+                        .param("status", "In Progress").param("priority", "Low").param("assignee", String.valueOf(tech.id())))
+                .andExpect(status().isConflict())
+                .andExpect(content().string(containsString("Your edits (status In Progress)")))
+                .andExpect(content().string(selectedOption(">Critical<")))
+                .andExpect(content().string(selectedOption("value=\"In Progress\"")));
+        assertThat(tickets.get(admin, id).status()).isEqualTo("Assigned");
+    }
     @Test void accountFormKeepsInputButNeverEchoesThePassword() throws Exception {
         mvc.perform(post("/users").with(as(admin)).with(csrf()).param("name", "Priya Shah").param("email", "alex@example.test")
                         .param("role", "TECHNICIAN").param("password", "Secret-password-999"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("Another account already uses this email address.")))
+                // The message also appears beside the field, linked to the input for screen readers.
+                .andExpect(content().string(matchesPattern(java.util.regex.Pattern.compile(
+                        "(?s).*<p\\s+class=\"field-error\"\\s+id=\"email-error\"\\s*>Another account already uses this email address\\.</p>.*"))))
+                .andExpect(content().string(matchesPattern(java.util.regex.Pattern.compile("(?s).*aria-describedby=\"email-error\".*"))))
                 .andExpect(content().string(containsString("value=\"Priya Shah\"")))
                 .andExpect(content().string(selectedOption("value=\"TECHNICIAN\"")))
                 .andExpect(content().string(not(containsString("Secret-password-999"))));
