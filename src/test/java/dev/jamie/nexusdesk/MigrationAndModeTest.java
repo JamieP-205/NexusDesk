@@ -99,4 +99,23 @@ class MigrationAndModeTest {
         throttle.failed("d@example.test", "10.0.0.3");
         assertThat(throttle.retryAfter("e@example.test", "10.0.0.3")).isPositive();
     }
+
+    @Test void guessesInFlightCountTowardsTheLimit() {
+        var throttle = new LoginThrottle(new MutableClock(), 3, 20, Duration.ofMinutes(15));
+        var wait = new Duration[1];
+        // Three simultaneous guesses are allowed to start; a fourth isn't, even before any has failed.
+        var first = throttle.tryStart("a@example.test", "10.0.0.9", wait);
+        var second = throttle.tryStart("a@example.test", "10.0.0.9", wait);
+        var third = throttle.tryStart("a@example.test", "10.0.0.9", wait);
+        assertThat(first).isNotNull(); assertThat(second).isNotNull(); assertThat(third).isNotNull();
+        assertThat(throttle.tryStart("a@example.test", "10.0.0.9", wait)).isNull();
+        first.failed(); second.failed(); third.failed();
+        third.failed(); // finishing twice is ignored
+        assertThat(throttle.tryStart("a@example.test", "10.0.0.9", wait)).isNull();
+        assertThat(wait[0]).isEqualTo(Duration.ofMinutes(15));
+        // A success releases its slot and clears the account count.
+        var other = throttle.tryStart("b@example.test", "10.0.0.9", wait);
+        other.succeeded();
+        assertThat(throttle.retryAfter("b@example.test", "10.0.0.9")).isZero();
+    }
 }
