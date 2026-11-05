@@ -13,8 +13,8 @@ The `hosted` profile runs NexusDesk for anyone with a browser, using fictional d
 
 | Limit | Default (`application-hosted.properties`) |
 | --- | --- |
-| Sandboxes at once | 100. When full, the one idle longest (at least 10 minutes) gives way, or the visitor sees "The demo is full right now". |
-| New sandboxes | 30 a minute across the whole demo |
+| Sandboxes at once | 100. When full, the one unused for longest gives way, so a flood of new sandboxes can't lock visitors out. |
+| New sandboxes | 120 a minute across the whole demo |
 | Rows per sandbox | 150 tickets, 400 comments, 40 accounts, 60 pieces of equipment, and 2,500 rows in total including history and assignments |
 | Form size | 64 KB; every text field already has a maximum length |
 | Idle expiry / maximum age | 60 minutes / 4 hours |
@@ -23,7 +23,7 @@ Nothing is written to disk. A restart empties everything and rebuilds the templa
 
 ## Hosting
 
-`deploy/huggingface/` holds a Docker Space definition. It downloads the released JAR, checks its SHA-256, and runs it as an unprivileged user with `--spring.profiles.active=hosted`. HTTPS ends at the host's proxy. Redirects are relative, and the session cookie is `Secure`.
+`deploy/huggingface/` holds a Docker Space definition. It builds the app from a pinned commit of this repository and runs it as an unprivileged user with `--spring.profiles.active=hosted`. HTTPS ends at the host's proxy. Redirects are relative, and the session cookie is `Secure`.
 
 Free hosting has limits. A Space that gets no visits for about two days goes to sleep, and the first visit afterwards waits while it starts. Its address and restarts are controlled by the host.
 

@@ -165,11 +165,12 @@ class HostedDemoTest {
                 .andExpect(redirectedUrl("/"));
     }
 
-    @Test void startingWhenFullGivesAClearMessage() throws Exception {
+    @Test void aFullDemoMakesRoomInsteadOfRefusing() throws Exception {
+        var first = start("employee");
         for (int i = 0; i < 6; i++) start("employee");
-        mvc.perform(post("/demo/start").param("role", "employee").session(new MockHttpSession()).with(csrf()))
-                .andExpect(redirectedUrl("/login"))
-                .andExpect(flash().attribute("demoError", containsString("full")));
+        assertThat(registry.size()).isEqualTo(6);
+        // The sandbox unused for longest gave way, so its visitor is asked to start again.
+        mvc.perform(get("/tickets").session(first)).andExpect(redirectedUrl("/login?ended"));
     }
 
 }

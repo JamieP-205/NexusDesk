@@ -105,8 +105,7 @@ public class SandboxRegistry {
         synchronized (recentCreations) {
             while (!recentCreations.isEmpty() && recentCreations.peekFirst().isBefore(now.minusSeconds(60))) recentCreations.removeFirst();
             if (recentCreations.size() >= creationsPerMinute) throw new Busy("Lots of people are starting demos right now. Please try again in a minute.");
-            if (sandboxes.size() >= maxSandboxes) evictOldestIdle(now);
-            if (sandboxes.size() >= maxSandboxes) throw new Busy("The demo is full right now. Please try again in a few minutes.");
+            if (sandboxes.size() >= maxSandboxes) evictLeastRecentlyUsed();
             recentCreations.addLast(now);
         }
         String id = token();
@@ -151,12 +150,12 @@ public class SandboxRegistry {
         return s.lastSeen().plus(idle).isBefore(now) || s.created().plus(maxAge).isBefore(now);
     }
 
-    /** At capacity, the sandbox unused for longest gives way if it has been idle for at least ten minutes. */
-    private void evictOldestIdle(Instant now) {
-        sandboxes.values().stream()
-                .filter(s -> s.lastSeen().plus(Duration.ofMinutes(10)).isBefore(now))
-                .min(Comparator.comparing(Sandbox::lastSeen))
-                .ifPresent(s -> remove(s.id()));
+    /**
+     * At capacity, the sandbox unused for longest gives way, so a flood of new sandboxes can't lock
+     * visitors out. Someone actively using the demo keeps their sandbox fresh with every click.
+     */
+    private void evictLeastRecentlyUsed() {
+        sandboxes.values().stream().min(Comparator.comparing(Sandbox::lastSeen)).ifPresent(s -> remove(s.id()));
     }
 
     private static JdbcDataSource memory(String name) {
