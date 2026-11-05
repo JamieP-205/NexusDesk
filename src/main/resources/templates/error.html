@@ -10,6 +10,9 @@
         role="alert"
         th:text="${message ?: 'That page or action is unavailable. Please return to the workspace and try again.'}"
       ></p>
+      <ul th:if="${details}">
+        <li th:each="d : ${details}" th:text="${d}"></li>
+      </ul>
       <p class="muted">
         Use your browser's Back button to check the details, or return to the
         workspace.

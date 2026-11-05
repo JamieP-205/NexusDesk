@@ -2,8 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head th:replace="~{fragments :: head('Edit account')}"></head>
   <body>
-    <aside th:replace="~{fragments :: nav('users')}"></aside>
-    <main class="main">
+    <aside th:replace="~{fragments :: sidebar('users')}"></aside>
+    <main class="main" id="main">
       <div class="topline"><a href="/users">← People</a></div>
       <header class="page-header">
         <div>
@@ -11,6 +11,7 @@
           <h1 th:text="${person.name}"></h1>
         </div>
       </header>
+      <div th:replace="~{fragments :: notice}"></div>
       <form
         class="panel form-panel"
         th:action="@{/users/{id}(id=${person.id})}"
@@ -18,33 +19,46 @@
       >
         <label
           >Name<input
+            id="name"
             name="name"
-            required
-            maxlength="100"
-            th:value="${person.name}" /></label
-        ><label
+            required maxlength="100"
+            th:value="${form['name']}"
+            th:aria-invalid="${errors['name'] != null} ? 'true'"
+            th:aria-describedby="${errors['name'] != null} ? 'name-error'"
+          /><span th:replace="~{fragments :: fieldError('name')}"></span
+        ></label>
+        <label
           >Email<input
+            id="email"
             name="email"
-            type="email"
-            required
-            maxlength="160"
-            th:value="${person.email}" /></label
-        ><label
-          >Role<select name="role">
+            type="email" required maxlength="160"
+            th:value="${form['email']}"
+            th:aria-invalid="${errors['email'] != null} ? 'true'"
+            th:aria-describedby="${errors['email'] != null} ? 'email-error'"
+          /><span th:replace="~{fragments :: fieldError('email')}"></span
+        ></label>
+        <label
+          >Role<select id="role" name="role"
+            th:aria-invalid="${errors['role'] != null} ? 'true'"
+            th:aria-describedby="${errors['role'] != null} ? 'role-error'">
             <option
               th:each="r : ${ {'EMPLOYEE','TECHNICIAN','ADMIN'} }"
               th:value="${r}"
-              th:text="${r}"
-              th:selected="${r == person.role}"
-            ></option></select></label
+              th:text="${r == 'ADMIN' ? 'Administrator' : (r == 'TECHNICIAN' ? 'IT technician' : 'Employee')}"
+              th:selected="${r == form['role']}"
+            ></option></select
+          ><span th:replace="~{fragments :: fieldError('role')}"></span></label
         ><label class="check"
           ><input
+            id="enabled"
             type="checkbox"
             name="enabled"
             value="true"
-            th:checked="${person.enabled}"
+            th:checked="${form['enabled']}"
+            th:aria-invalid="${errors['enabled'] != null} ? 'true'"
+            th:aria-describedby="${errors['enabled'] != null} ? 'enabled-error'"
           />Account enabled</label
-        >
+        ><span th:replace="~{fragments :: fieldError('enabled')}"></span>
         <p class="help">
           Reassign active tickets before disabling IT staff. A disabled person
           is signed out on their next request; their old records stay in place.

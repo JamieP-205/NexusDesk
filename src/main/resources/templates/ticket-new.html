@@ -2,8 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head th:replace="~{fragments :: head('New ticket')}"></head>
   <body>
-    <aside th:replace="~{fragments :: nav('tickets')}"></aside>
-    <main class="main">
+    <aside th:replace="~{fragments :: sidebar('tickets')}"></aside>
+    <main class="main" id="main">
       <div class="topline"><a href="/tickets">← Support tickets</a></div>
       <header class="page-header">
         <div>
@@ -14,29 +14,42 @@
           </p>
         </div>
       </header>
+      <div th:replace="~{fragments :: notice}"></div>
       <form class="panel form-panel" th:action="@{/tickets}" method="post">
         <label
           >Title<input
+            id="title"
             name="title"
             required
             maxlength="140"
+            th:value="${form['title']}"
             placeholder="e.g. Laptop keeps losing Wi-Fi"
-        /></label>
+            th:aria-invalid="${errors['title'] != null} ? 'true'"
+            th:aria-describedby="${errors['title'] != null} ? 'title-error'"
+          /><span th:replace="~{fragments :: fieldError('title')}"></span
+        ></label>
         <div class="form-grid">
           <label
-            >Category<select name="category" required>
+            >Category<select id="category" name="category" required
+              th:aria-invalid="${errors['category'] != null} ? 'true'"
+              th:aria-describedby="${errors['category'] != null} ? 'category-error'">
               <option
                 th:each="c : ${categories}"
                 th:text="${c}"
+                th:selected="${c == form['category']}"
               ></option></select
+            ><span th:replace="~{fragments :: fieldError('category')}"></span
           ></label>
           <label
-            >Priority<select name="priority" required>
+            >Priority<select id="priority" name="priority" required
+              th:aria-invalid="${errors['priority'] != null} ? 'true'"
+              th:aria-describedby="${errors['priority'] != null} ? 'priority-error'">
               <option
                 th:each="p : ${priorities}"
                 th:text="${p}"
-                th:selected="${p == 'Medium'}"
+                th:selected="${p == form['priority']}"
               ></option></select
+            ><span th:replace="~{fragments :: fieldError('priority')}"></span
           ></label>
         </div>
         <p class="help">
@@ -45,12 +58,17 @@
         </p>
         <label
           >What happened?<textarea
+            id="description"
             name="description"
             required
             maxlength="6000"
             rows="8"
+            th:text="${form['description']}"
+            th:aria-invalid="${errors['description'] != null} ? 'true'"
+            th:aria-describedby="${errors['description'] != null} ? 'description-error'"
             placeholder="What were you trying to do? Include any error message and what you've already tried."
-          ></textarea>
+          ></textarea
+          ><span th:replace="~{fragments :: fieldError('description')}"></span>
         </label>
         <p class="help">
           Don't include passwords or other sensitive information.

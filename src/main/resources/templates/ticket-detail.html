@@ -2,8 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head th:replace="~{fragments :: head('Ticket ' + ${ticket.id})}"></head>
   <body>
-    <aside th:replace="~{fragments :: nav('tickets')}"></aside>
-    <main class="main">
+    <aside th:replace="~{fragments :: sidebar('tickets')}"></aside>
+    <main class="main" id="main">
       <div class="topline">
         <a href="/tickets">← Support tickets</a
         ><span th:text="${'ND-' + ticket.id}"></span>
@@ -35,7 +35,7 @@
               <p class="preserve" th:text="${ticket.resolution}"></p>
             </div>
           </section>
-          <section class="panel padded">
+          <section class="panel padded" id="conversation">
             <h2>Conversation</h2>
             <p class="muted" th:if="${#lists.isEmpty(comments)}">
               No comments yet.
@@ -57,16 +57,22 @@
             >
               <label
                 >Add a comment<textarea
+                  id="body"
                   name="body"
                   required
                   maxlength="3000"
                   rows="4"
+                  th:text="${commentDraft}"
+                  th:aria-invalid="${errors['body'] != null} ? 'true'"
+                  th:aria-describedby="${errors['body'] != null} ? 'body-error'"
                   placeholder="Add an update or ask a question…"
-                ></textarea></label
+                ></textarea
+                ><span th:replace="~{fragments :: fieldError('body')}"></span></label
               ><button type="submit">Post comment</button>
             </form>
             <p class="muted" th:if="${ticket.status == 'Closed'}">
-              This ticket is closed. IT can reopen it if the problem returns.
+              This ticket is closed.
+              <span th:text="${me.isStaff() ? 'Reopen it from Update ticket if the problem returns.' : 'If the problem returns, ask IT to reopen it or create a new ticket.'}"></span>
             </p>
           </section>
           <section class="panel padded">
@@ -103,52 +109,75 @@
           </section>
           <section class="panel padded" th:if="${me.isStaff()}">
             <h2>Update ticket</h2>
-            <form th:action="@{/tickets/{id}(id=${ticket.id})}" method="post">
+            <form
+              th:action="@{/tickets/{id}(id=${ticket.id})}"
+              method="post"
+              data-ticket-form
+            >
               <input
                 type="hidden"
                 name="version"
                 th:value="${ticket.version}"
               />
               <label
-                >Status<select name="status">
+                >Status<select id="status" name="status"
+                  th:aria-invalid="${errors['status'] != null} ? 'true'"
+                  th:aria-describedby="${errors['status'] != null} ? 'status-error'">
                   <option
                     th:each="s : ${nextStatuses}"
                     th:value="${s}"
-                    th:text="${s}"
-                    th:selected="${s == ticket.status}"
+                    th:text="${s == ticket.status ? s + ' (current)' : s}"
+                    th:selected="${s == formStatus}"
                   ></option></select
+                ><span th:replace="~{fragments :: fieldError('status')}"></span
               ></label>
               <label
-                >Priority<select name="priority">
+                >Priority<select id="priority" name="priority">
                   <option
                     th:each="p : ${priorities}"
                     th:text="${p}"
-                    th:selected="${p == ticket.priority}"
+                    th:selected="${p == formPriority}"
                   ></option></select
               ></label>
               <label
-                >Technician<select name="assignee">
+                >Technician<select id="assignee" name="assignee"
+                  aria-describedby="assignment-rule"
+                  th:aria-invalid="${errors['assignee'] != null} ? 'true'"
+                  th:attrappend="aria-describedby=${errors['assignee'] != null} ? ' assignee-error'">
                   <option value="">Unassigned</option>
                   <option
                     th:each="p : ${technicians}"
                     th:value="${p.id}"
-                    th:text="${p.name}"
-                    th:selected="${p.id == ticket.assigneeId}"
+                    th:text="${p.enabled and p.isStaff() ? p.name : p.name + ' (no longer in IT)'}"
+                    th:selected="${p.id == formAssignee}"
                   ></option></select
+                ><span th:replace="~{fragments :: fieldError('assignee')}"></span
               ></label>
-              <p class="help">
-                Choose Assigned and a technician to pick up an open ticket.
-                Reopening clears the assignment.
+              <p class="help" id="assignment-rule">
+                Open tickets have no technician. Assigned, In Progress, Waiting,
+                Resolved and Closed tickets always have one. Reopening a ticket
+                returns it to the queue as Open and Unassigned.
               </p>
+              <p class="help live" data-sync-message aria-live="polite"></p>
               <label
-                >Resolution<textarea
+                >Resolution notes<textarea
+                  id="resolution"
                   name="resolution"
                   maxlength="3000"
                   rows="4"
-                  th:text="${ticket.resolution}"
-                  placeholder="Required to resolve or close"
-                ></textarea></label
-              ><button class="primary full" type="submit">Save changes</button>
+                  th:text="${formResolution}"
+                  aria-describedby="resolution-help"
+                  th:aria-invalid="${errors['resolution'] != null} ? 'true'"
+                  th:attrappend="aria-describedby=${errors['resolution'] != null} ? ' resolution-error'"
+                  placeholder="What fixed it?"
+                ></textarea
+                ><span th:replace="~{fragments :: fieldError('resolution')}"></span
+              ></label>
+              <p class="help" id="resolution-help">
+                Required to resolve or close. Earlier notes stay in the history
+                if the ticket is reopened.
+              </p>
+              <button class="primary full" type="submit">Save changes</button>
             </form>
           </section>
         </aside>

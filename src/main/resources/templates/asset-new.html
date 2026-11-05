@@ -2,8 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head th:replace="~{fragments :: head('Add equipment')}"></head>
   <body>
-    <aside th:replace="~{fragments :: nav('assets')}"></aside>
-    <main class="main">
+    <aside th:replace="~{fragments :: sidebar('assets')}"></aside>
+    <main class="main" id="main">
       <div class="topline"><a href="/assets">← Equipment</a></div>
       <header class="page-header">
         <div>
@@ -14,28 +14,54 @@
           </p>
         </div>
       </header>
+      <div th:replace="~{fragments :: notice}"></div>
       <form class="panel form-panel" th:action="@{/assets}" method="post">
         <div class="form-grid">
           <label
-            >Type<select name="type">
+            >Type<select id="type" name="type">
               <option
                 th:each="t : ${assetTypes}"
                 th:text="${t}"
-              ></option></select></label
+                th:selected="${t == form['type']}"
+              ></option></select
+            ><span th:replace="~{fragments :: fieldError('type')}"></span></label
           ><label
-            >Manufacturer<input
-              name="manufacturer"
-              required
-              maxlength="80" /></label
-          ><label>Model<input name="model" required maxlength="100" /></label
-          ><label
-            >Serial number<input
-              name="serial"
-              required
-              maxlength="100" /></label
-          ><label
-            >Purchase date<input type="date" name="purchaseDate" required
-          /></label>
+          >Manufacturer<input
+            id="manufacturer"
+            name="manufacturer"
+            required maxlength="80"
+            th:value="${form['manufacturer']}"
+            th:aria-invalid="${errors['manufacturer'] != null} ? 'true'"
+            th:aria-describedby="${errors['manufacturer'] != null} ? 'manufacturer-error'"
+          /><span th:replace="~{fragments :: fieldError('manufacturer')}"></span
+        ></label><label
+          >Model<input
+            id="model"
+            name="model"
+            required maxlength="100"
+            th:value="${form['model']}"
+            th:aria-invalid="${errors['model'] != null} ? 'true'"
+            th:aria-describedby="${errors['model'] != null} ? 'model-error'"
+          /><span th:replace="~{fragments :: fieldError('model')}"></span
+        ></label><label
+          >Serial number<input
+            id="serial"
+            name="serial"
+            required maxlength="100"
+            th:value="${form['serial']}"
+            th:aria-invalid="${errors['serial'] != null} ? 'true'"
+            th:aria-describedby="${errors['serial'] != null} ? 'serial-error'"
+          /><span th:replace="~{fragments :: fieldError('serial')}"></span
+        ></label><label
+          >Purchase date<input
+            id="purchaseDate"
+            name="purchaseDate"
+            type="date" required
+            th:value="${form['purchaseDate']}"
+            th:aria-invalid="${errors['purchaseDate'] != null} ? 'true'"
+            th:aria-describedby="${errors['purchaseDate'] != null} ? 'purchaseDate-error'"
+          /><span th:replace="~{fragments :: fieldError('purchaseDate')}"></span
+        ></label>
         </div>
         <div class="actions">
           <button class="primary" type="submit">Add equipment</button

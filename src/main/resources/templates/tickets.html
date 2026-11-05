@@ -2,8 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head th:replace="~{fragments :: head('Support tickets')}"></head>
   <body>
-    <aside th:replace="~{fragments :: nav('tickets')}"></aside>
-    <main class="main">
+    <aside th:replace="~{fragments :: sidebar('tickets')}"></aside>
+    <main class="main" id="main">
       <div class="topline">
         <span>WORKSPACE / TICKETS</span
         ><span th:text="${me.isStaff() ? 'Team queue' : 'My requests'}"></span>
@@ -22,11 +22,16 @@
       <form class="panel filters" action="/tickets" method="get">
         <label class="search-field"
           >Search titles<input
+            id="q"
             name="q"
+            type="search"
             th:value="${q}"
             maxlength="140"
             placeholder="Search for a ticket…"
-        /></label>
+            th:aria-invalid="${errors['q'] != null} ? 'true'"
+            th:aria-describedby="${errors['q'] != null} ? 'q-error'"
+          /><span th:replace="~{fragments :: fieldError('q')}"></span
+        ></label>
         <label
           >Status<select name="status">
             <option value="">All statuses</option>
@@ -57,7 +62,7 @@
               th:selected="${c == category}"
             ></option></select
         ></label>
-        <details class="advanced">
+        <details class="advanced" th:open="${creator != null or assignee != null or from != null or to != null}">
           <summary>People &amp; dates</summary>
           <div class="form-grid">
             <label th:if="${me.isStaff()}"
@@ -86,8 +91,15 @@
                 name="from"
                 th:value="${from}" /></label
             ><label
-              >Created to<input type="date" name="to" th:value="${to}"
-            /></label>
+              >Created to<input
+                id="to"
+                type="date"
+                name="to"
+                th:value="${to}"
+                th:aria-invalid="${errors['to'] != null} ? 'true'"
+                th:aria-describedby="${errors['to'] != null} ? 'to-error'"
+              /><span th:replace="~{fragments :: fieldError('to')}"></span
+            ></label>
           </div>
         </details>
         <div class="actions">
@@ -100,10 +112,17 @@
           <h2>Ticket queue</h2>
           <span
             class="badge"
-            th:text="${#lists.size(tickets) + ' tickets'}"
+            th:text="${results.total == 1 ? '1 ticket' : results.total + ' tickets'}"
           ></span>
         </div>
-        <div th:replace="~{fragments :: ticketTable(${tickets})}"></div>
+        <p class="result-range muted small" th:if="${results.total > 0}" aria-live="polite">
+          Showing <span th:text="${results.firstItem() + '–' + results.lastItem()}"></span> of
+          <span th:text="${results.total}"></span>, most recently updated first<span
+            th:if="${filtered}"
+          > · filters applied</span>.
+        </p>
+        <div th:replace="~{fragments :: ticketTable(${results.items})}"></div>
+        <nav th:replace="~{fragments :: pagination(pager=${results}, links=${pageLinks})}"></nav>
       </section>
     </main>
   </body>

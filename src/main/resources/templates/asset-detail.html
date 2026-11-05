@@ -2,8 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head th:replace="~{fragments :: head('Equipment details')}"></head>
   <body>
-    <aside th:replace="~{fragments :: nav('assets')}"></aside>
-    <main class="main">
+    <aside th:replace="~{fragments :: sidebar('assets')}"></aside>
+    <main class="main" id="main">
       <div class="topline">
         <a href="/assets">← Equipment</a
         ><span th:text="${'AS-' + asset.id}"></span>
@@ -31,45 +31,65 @@
             <input type="hidden" name="version" th:value="${asset.version}" />
             <div class="form-grid">
               <label
-                >Type<select name="type">
+                >Type<select id="type" name="type">
                   <option
                     th:each="t : ${assetTypes}"
                     th:text="${t}"
-                    th:selected="${t == asset.type}"
-                  ></option></select></label
+                    th:selected="${t == form['type']}"
+                  ></option></select
+                ><span th:replace="~{fragments :: fieldError('type')}"></span></label
               ><label
-                >Manufacturer<input
-                  name="manufacturer"
-                  th:value="${asset.manufacturer}"
-                  required
-                  maxlength="80" /></label
-              ><label
-                >Model<input
-                  name="model"
-                  th:value="${asset.model}"
-                  required
-                  maxlength="100" /></label
-              ><label
-                >Serial number<input
-                  name="serial"
-                  th:value="${asset.serialNumber}"
-                  required
-                  maxlength="100" /></label
-              ><label
-                >Purchased<input
-                  type="date"
-                  name="purchaseDate"
-                  th:value="${asset.purchaseDate}"
-                  required /></label
-              ><label
-                >Status<select name="status">
+          >Manufacturer<input
+            id="manufacturer"
+            name="manufacturer"
+            required maxlength="80"
+            th:value="${form['manufacturer']}"
+            th:aria-invalid="${errors['manufacturer'] != null} ? 'true'"
+            th:aria-describedby="${errors['manufacturer'] != null} ? 'manufacturer-error'"
+          /><span th:replace="~{fragments :: fieldError('manufacturer')}"></span
+        ></label><label
+          >Model<input
+            id="model"
+            name="model"
+            required maxlength="100"
+            th:value="${form['model']}"
+            th:aria-invalid="${errors['model'] != null} ? 'true'"
+            th:aria-describedby="${errors['model'] != null} ? 'model-error'"
+          /><span th:replace="~{fragments :: fieldError('model')}"></span
+        ></label><label
+          >Serial number<input
+            id="serial"
+            name="serial"
+            required maxlength="100"
+            th:value="${form['serial']}"
+            th:aria-invalid="${errors['serial'] != null} ? 'true'"
+            th:aria-describedby="${errors['serial'] != null} ? 'serial-error'"
+          /><span th:replace="~{fragments :: fieldError('serial')}"></span
+        ></label><label
+          >Purchased<input
+            id="purchaseDate"
+            name="purchaseDate"
+            type="date" required
+            th:value="${form['purchaseDate']}"
+            th:aria-invalid="${errors['purchaseDate'] != null} ? 'true'"
+            th:aria-describedby="${errors['purchaseDate'] != null} ? 'purchaseDate-error'"
+          /><span th:replace="~{fragments :: fieldError('purchaseDate')}"></span
+        ></label><label
+                >Status<select id="status" name="status"
+                  th:aria-invalid="${errors['status'] != null} ? 'true'"
+                  th:aria-describedby="${errors['status'] != null} ? 'status-error'">
                   <option
                     th:each="s : ${asset.ownerId != null ? {'Assigned'} : {'Available','Repair','Retired'}}"
                     th:text="${s}"
-                    th:selected="${s == asset.status}"
+                    th:selected="${s == form['status']}"
                   ></option></select
+                ><span th:replace="~{fragments :: fieldError('status')}"></span
               ></label>
             </div>
+            <p class="help" th:if="${asset.ownerId != null}">
+              Status stays Assigned while someone has this equipment. Return it to
+              stock to change it.
+            </p>
             <button class="primary" type="submit">Save details</button>
           </form>
           <dl th:unless="${me.isAdmin()}">
@@ -98,19 +118,24 @@
             </p>
             <button type="submit">Return to stock</button>
           </form>
+          <p class="muted" th:if="${me.isAdmin() and asset.ownerId == null and asset.status != 'Available'}"
+             th:text="${'This equipment is marked ' + asset.status + '. Set its status to Available before assigning it.'}"></p>
           <form
             th:if="${me.isAdmin() and asset.status == 'Available'}"
             th:action="@{/assets/{id}/assign(id=${asset.id})}"
             method="post"
           >
             <label
-              >Assign to<select name="owner" required>
+              >Assign to<select id="owner" name="owner" required
+                th:aria-invalid="${errors['owner'] != null} ? 'true'"
+                th:aria-describedby="${errors['owner'] != null} ? 'owner-error'">
                 <option value="">Choose a person</option>
                 <option
                   th:each="p : ${people}"
                   th:value="${p.id}"
                   th:text="${p.name}"
-                ></option></select></label
+                ></option></select
+              ><span th:replace="~{fragments :: fieldError('owner')}"></span></label
             ><button type="submit">Assign equipment</button>
           </form>
         </section>
@@ -132,8 +157,8 @@
             <tbody>
               <tr th:each="a : ${assignments}">
                 <td th:text="${a.name}"></td>
-                <td th:text="${a.assigned_at}"></td>
-                <td th:text="${a.returned_at ?: 'Current assignment'}"></td>
+                <td th:text="${#temporals.format(a.assigned_at,'dd MMM yyyy, HH:mm')}"></td>
+                <td th:text="${a.returned_at == null ? 'Current assignment' : #temporals.format(a.returned_at,'dd MMM yyyy, HH:mm')}"></td>
               </tr>
             </tbody>
           </table>

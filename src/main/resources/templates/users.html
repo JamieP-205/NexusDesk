@@ -2,8 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head th:replace="~{fragments :: head('People')}"></head>
   <body>
-    <aside th:replace="~{fragments :: nav('users')}"></aside>
-    <main class="main">
+    <aside th:replace="~{fragments :: sidebar('users')}"></aside>
+    <main class="main" id="main">
       <div class="topline">
         <span>WORKSPACE / PEOPLE</span><span>Administrator</span>
       </div>
@@ -14,7 +14,7 @@
           <p class="muted">Give each person the access they need.</p>
         </div>
       </header>
-      <div th:replace="~{fragments :: notice}"></div>
+      <th:block th:if="${#maps.isEmpty(errors)}"><div th:replace="~{fragments :: notice}"></div></th:block>
       <section class="panel">
         <div class="section-heading">
           <h2>Team directory</h2>
@@ -39,8 +39,10 @@
                   <strong th:text="${p.name}"></strong
                   ><small th:text="${p.email}"></small>
                 </td>
-                <td th:text="${p.role}"></td>
-                <td th:text="${p.enabled ? 'Enabled' : 'Disabled'}"></td>
+                <td th:text="${p.role == 'ADMIN' ? 'Administrator' : (p.role == 'TECHNICIAN' ? 'IT technician' : 'Employee')}"></td>
+                <td>
+                  <span class="badge" th:classappend="${p.enabled} ? 'done'" th:text="${p.enabled ? 'Enabled' : 'Disabled'}"></span>
+                </td>
                 <td>
                   <a
                     th:href="@{/users/{id}(id=${p.id})}"
@@ -53,42 +55,56 @@
           </table>
         </div>
       </section>
-      <section class="panel padded space-top">
+      <section class="panel padded space-top" id="create-account">
         <h2>Create an account</h2>
+        <th:block th:unless="${#maps.isEmpty(errors)}"><div th:replace="~{fragments :: notice}"></div></th:block>
         <form th:action="@{/users}" method="post">
           <div class="form-grid">
             <label
-              >Name<input
-                name="name"
-                required
-                maxlength="100"
-                autocomplete="off" /></label
-            ><label
-              >Email<input
-                type="email"
-                name="email"
-                required
-                maxlength="160"
-                autocomplete="off" /></label
-            ><label
-              >Role<select name="role">
-                <option value="EMPLOYEE">Employee</option>
-                <option value="TECHNICIAN">IT technician</option>
-                <option value="ADMIN">Administrator</option>
-              </select></label
+          >Name<input
+            id="name"
+            name="name"
+            required maxlength="100" autocomplete="off"
+            th:value="${form['name']}"
+            th:aria-invalid="${errors['name'] != null} ? 'true'"
+            th:aria-describedby="${errors['name'] != null} ? 'name-error'"
+          /><span th:replace="~{fragments :: fieldError('name')}"></span
+        ></label>
+            <label
+          >Email<input
+            id="email"
+            name="email"
+            type="email" required maxlength="160" autocomplete="off"
+            th:value="${form['email']}"
+            th:aria-invalid="${errors['email'] != null} ? 'true'"
+            th:aria-describedby="${errors['email'] != null} ? 'email-error'"
+          /><span th:replace="~{fragments :: fieldError('email')}"></span
+        ></label>
+            <label
+              >Role<select id="role" name="role">
+                <option value="EMPLOYEE" th:selected="${form['role'] == 'EMPLOYEE'}">Employee</option>
+                <option value="TECHNICIAN" th:selected="${form['role'] == 'TECHNICIAN'}">IT technician</option>
+                <option value="ADMIN" th:selected="${form['role'] == 'ADMIN'}">Administrator</option>
+              </select
+              ><span th:replace="~{fragments :: fieldError('role')}"></span></label
             ><label
               >Password<input
+                id="password"
                 name="password"
                 type="password"
                 required
                 minlength="12"
                 maxlength="128"
                 autocomplete="new-password"
-            /></label>
+                aria-describedby="password-help"
+                th:aria-invalid="${errors['password'] != null} ? 'true'"
+              /><span th:replace="~{fragments :: fieldError('password')}"></span
+            ></label>
           </div>
-          <p class="help">
-            Use 12–128 characters and share the password securely. Password
-            reset isn't available in this version.
+          <p class="help" id="password-help">
+            Use 12–128 characters and share the password securely. For safety the
+            password isn't kept if the form needs correcting. Password reset isn't
+            available in this version.
           </p>
           <button class="primary" type="submit">Create account</button>
         </form>
