@@ -21,6 +21,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:demo-profile;DB_CLOSE_DELAY=-1")
 @ActiveProfiles("demo")
@@ -47,6 +48,18 @@ class DemoProfileTest {
         mvc.perform(post("/login").param("username", "employee@example.test").param("password", DemoData.PUBLIC_PASSWORD).with(csrf()))
                 .andExpect(authenticated());
         mvc.perform(get("/login")).andExpect(content().string(containsString("Demo accounts")));
+    }
+
+    @Test void theLocalDemoChecklistIsKeptPerAccountAcrossSignIns() throws Exception {
+        var casey = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
+                .user("casey@example.test").roles("EMPLOYEE");
+        mvc.perform(get("/tickets").with(casey)).andExpect(content().string(containsString("Things to try as an employee")))
+                .andExpect(content().string(containsString("0 of 3 done")))
+                .andExpect(content().string(containsString("sign in as tech@example.test")));
+        mvc.perform(post("/tickets").with(casey).with(csrf()).param("title", "Checklist").param("description", "Details")
+                .param("category", "Other").param("priority", "Low")).andExpect(status().is3xxRedirection());
+        // A fresh request with no session, as after signing out and in again.
+        mvc.perform(get("/tickets").with(casey)).andExpect(content().string(containsString("1 of 3 done")));
     }
 
     @Test void everyDemoPageRendersForEveryRole() throws Exception {

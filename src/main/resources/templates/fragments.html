@@ -66,6 +66,29 @@
         </form>
       </div>
     </aside>
+    <section
+      th:fragment="guide"
+      class="panel padded guide"
+      th:if="${guide != null}"
+      aria-labelledby="guide-heading"
+    >
+      <div class="section-heading">
+        <h2 id="guide-heading" th:text="${guide.heading}">Things to try</h2>
+        <span class="small muted" th:text="${guide.done + ' of ' + #lists.size(guide.steps) + ' done'}"></span>
+      </div>
+      <p class="small" th:text="${guide.intro}"></p>
+      <ol class="guide-steps">
+        <li th:each="s : ${guide.steps}" th:classappend="${s.done} ? 'done'">
+          <span class="guide-mark" aria-hidden="true" th:text="${s.done ? '✓' : ''}"></span>
+          <div>
+            <a th:href="${s.href}" th:text="${s.label}"></a
+            ><span class="visually-hidden" th:if="${s.done}"> (done)</span>
+            <p class="small muted" th:text="${s.detail}"></p>
+          </div>
+        </li>
+      </ol>
+      <p class="small guide-journey" th:text="${guide.journey}"></p>
+    </section>
     <th:block th:fragment="notice">
       <div th:if="${success}" class="notice" role="status" th:text="${success}"></div>
       <div th:if="${info}" class="notice info" role="status" th:text="${info}"></div>

@@ -295,4 +295,109 @@ class WebFlowTest {
         mvc.perform(get("/tickets").with(as(admin))).andExpect(content().string(containsString("The queue is empty")));
         mvc.perform(get("/assets").with(as(sam))).andExpect(content().string(containsString("Equipment will appear here once it is assigned.")));
     }
+
+    // --- Quick actions on a ticket ---
+
+    int version(long id) { return tickets.get(admin, id).version(); }
+
+    @Test void aTechnicianCanPickUpAndResolveATicketInOnePress() throws Exception {
+        long id = tickets.create(alex, "Monitor is blank", "Details", "Hardware", "Medium");
+        mvc.perform(get("/tickets/" + id).with(as(tech))).andExpect(content().string(containsString("Assign to me")));
+        mvc.perform(post("/tickets/" + id + "/take").with(as(tech)).with(csrf()).param("version", String.valueOf(version(id))))
+                .andExpect(redirectedUrl("/tickets/" + id)).andExpect(flash().attribute("success", containsString("assigned to you")));
+        var taken = tickets.get(admin, id);
+        assertThat(taken.status()).isEqualTo("Assigned");
+        assertThat(taken.assigneeId()).isEqualTo(tech.id());
+
+        // Resolving still needs notes, as on the full form.
+        mvc.perform(post("/tickets/" + id + "/resolve").with(as(tech)).with(csrf()).param("version", String.valueOf(version(id))))
+                .andExpect(flash().attribute("error", containsString("resolution notes")));
+        assertThat(tickets.get(admin, id).status()).isEqualTo("Assigned");
+        mvc.perform(post("/tickets/" + id + "/resolve").with(as(tech)).with(csrf()).param("version", String.valueOf(version(id)))
+                        .param("resolution", "Reseated the cable."))
+                .andExpect(flash().attribute("success", containsString("Resolved")));
+        var resolved = tickets.get(admin, id);
+        assertThat(resolved.status()).isEqualTo("Resolved");
+        assertThat(resolved.resolution()).isEqualTo("Reseated the cable.");
+        assertThat(tickets.history(admin, id)).anyMatch(h -> h.body().contains("Open → Assigned"))
+                .anyMatch(h -> h.body().contains("Assigned → Resolved"));
+    }
+
+    @Test void quickActionsKeepTheTicketRulesAndConflictCheck() throws Exception {
+        long id = tickets.create(alex, "Printer jam", "Details", "Printer", "Low");
+        // An Open ticket can't be resolved before someone picks it up.
+        mvc.perform(post("/tickets/" + id + "/resolve").with(as(tech)).with(csrf()).param("version", String.valueOf(version(id)))
+                        .param("resolution", "Fixed"))
+                .andExpect(flash().attribute("error", containsString("Assign this ticket")));
+        // A stale page can't overwrite someone else's change.
+        int stale = version(id);
+        tickets.take(admin, id, stale);
+        mvc.perform(post("/tickets/" + id + "/take").with(as(tech)).with(csrf()).param("version", String.valueOf(stale)))
+                .andExpect(flash().attribute("error", containsString("Someone else saved this ticket")));
+        assertThat(tickets.get(admin, id).assigneeId()).isEqualTo(admin.id());
+    }
+
+    @Test void employeesCantUseTechnicianQuickActions() throws Exception {
+        long id = tickets.create(alex, "Mine", "Details", "Other", "Low");
+        mvc.perform(get("/tickets/" + id).with(as(alex))).andExpect(content().string(not(containsString("Assign to me"))));
+        mvc.perform(post("/tickets/" + id + "/take").with(as(alex)).with(csrf()).param("version", String.valueOf(version(id))))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/tickets/" + id + "/resolve").with(as(alex)).with(csrf()).param("version", String.valueOf(version(id)))
+                .param("resolution", "Done")).andExpect(status().isForbidden());
+        assertThat(tickets.get(admin, id).status()).isEqualTo("Open");
+    }
+
+    long resolvedTicketFor(Account requester) {
+        long id = tickets.create(requester, "Laptop won't charge", "Details", "Hardware", "High");
+        tickets.take(tech, id, version(id));
+        tickets.resolve(tech, id, version(id), "Replaced the charger.");
+        return id;
+    }
+
+    @Test void theRequesterCanConfirmAResolvedTicketIsFixed() throws Exception {
+        long id = resolvedTicketFor(alex);
+        mvc.perform(get("/tickets/" + id).with(as(alex))).andExpect(content().string(containsString("Is it fixed?")));
+        // Only the person who raised it: another employee gets "not found", IT can't confirm for them.
+        mvc.perform(post("/tickets/" + id + "/confirm").with(as(sam)).with(csrf()).param("version", String.valueOf(version(id))))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/tickets/" + id + "/confirm").with(as(tech)).with(csrf()).param("version", String.valueOf(version(id))))
+                .andExpect(status().isNotFound());
+        mvc.perform(post("/tickets/" + id + "/confirm").with(as(alex)).with(csrf()).param("version", String.valueOf(version(id))))
+                .andExpect(flash().attribute("success", containsString("Closed")));
+        var closed = tickets.get(admin, id);
+        assertThat(closed.status()).isEqualTo("Closed");
+        assertThat(closed.resolution()).isEqualTo("Replaced the charger.");
+        assertThat(closed.assigneeId()).isEqualTo(tech.id());
+        // Confirming twice isn't possible.
+        mvc.perform(post("/tickets/" + id + "/confirm").with(as(alex)).with(csrf()).param("version", String.valueOf(version(id))))
+                .andExpect(flash().attribute("error", containsString("Only a Resolved ticket")));
+    }
+
+    @Test void theRequesterCanReopenWithAReason() throws Exception {
+        long id = resolvedTicketFor(alex);
+        mvc.perform(post("/tickets/" + id + "/reopen").with(as(alex)).with(csrf()).param("version", String.valueOf(version(id))))
+                .andExpect(flash().attribute("error", containsString("What's still wrong is required")));
+        assertThat(tickets.get(admin, id).status()).isEqualTo("Resolved");
+        mvc.perform(post("/tickets/" + id + "/reopen").with(as(sam)).with(csrf()).param("version", String.valueOf(version(id)))
+                .param("reason", "Not mine")).andExpect(status().isNotFound());
+        mvc.perform(post("/tickets/" + id + "/reopen").with(as(alex)).with(csrf()).param("version", String.valueOf(version(id)))
+                        .param("reason", "It stopped charging again."))
+                .andExpect(flash().attribute("success", containsString("back in IT's queue")));
+        var reopened = tickets.get(admin, id);
+        assertThat(reopened.status()).isEqualTo("Open");
+        assertThat(reopened.assigneeId()).isNull();
+        assertThat(reopened.resolution()).isNull();
+        assertThat(tickets.comments(admin, id)).anyMatch(c -> c.body().equals("It stopped charging again."));
+        // The earlier fix stays in the history.
+        assertThat(tickets.history(admin, id)).anyMatch(h -> h.body().contains("Replaced the charger."))
+                .anyMatch(h -> h.body().contains("reopened by the requester"));
+        // A closed ticket can be reopened too, and an open one can't.
+        mvc.perform(post("/tickets/" + id + "/reopen").with(as(alex)).with(csrf()).param("version", String.valueOf(version(id)))
+                .param("reason", "Again")).andExpect(flash().attribute("error", containsString("Only a Resolved or Closed")));
+    }
+
+    @Test void theNormalAppShowsNoDemoChecklist() throws Exception {
+        mvc.perform(get("/tickets").with(as(alex))).andExpect(content().string(not(containsString("Things to try"))));
+        mvc.perform(get("/").with(as(tech))).andExpect(content().string(not(containsString("Things to try"))));
+    }
 }

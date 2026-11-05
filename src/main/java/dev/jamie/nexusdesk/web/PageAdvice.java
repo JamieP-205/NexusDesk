@@ -19,13 +19,19 @@ public class PageAdvice {
     private final UserService users;
     private final boolean demo;
     private final boolean hosted;
-    public PageAdvice(UserService users, org.springframework.core.env.Environment env) {
+    private final Guide guide;
+    public PageAdvice(UserService users, org.springframework.core.env.Environment env, Guide guide) {
         this.users = users;
+        this.guide = guide;
         this.demo = env.matchesProfiles("demo");
         this.hosted = env.matchesProfiles("hosted");
     }
-    @ModelAttribute void common(Authentication auth, Model model) {
-        if (auth != null && !(auth instanceof AnonymousAuthenticationToken)) model.addAttribute("me", users.current(auth));
+    @ModelAttribute void common(Authentication auth, Model model, jakarta.servlet.http.HttpServletRequest request) {
+        if (auth != null && !(auth instanceof AnonymousAuthenticationToken)) {
+            var me = users.current(auth);
+            model.addAttribute("me", me);
+            model.addAttribute("guide", guide.view(request, me));
+        }
         model.addAttribute("demoMode", demo);
         model.addAttribute("hostedMode", hosted);
         // Forms read these on every page; controllers replace them when a submission fails.

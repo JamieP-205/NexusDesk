@@ -19,6 +19,7 @@
         <a class="button primary" href="/tickets/new">+ New ticket</a>
       </header>
       <div th:replace="~{fragments :: notice}"></div>
+      <section th:replace="~{fragments :: guide}"></section>
       <section class="stats" aria-label="Support totals">
         <div class="stat" th:each="stat : ${totals}">
           <span th:text="${stat.key}"></span
@@ -82,7 +83,7 @@
         </div>
         <div th:replace="~{fragments :: ticketTable(${recent})}"></div>
       </section>
-      <footer>NexusDesk <span>Practice project · v0.2.1</span></footer>
+      <footer>NexusDesk <span>Practice project · v0.2.2</span></footer>
     </main>
   </body>
 </html>

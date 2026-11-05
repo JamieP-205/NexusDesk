@@ -2,6 +2,7 @@ package dev.jamie.nexusdesk.web;
 
 import dev.jamie.nexusdesk.model.Account;
 import dev.jamie.nexusdesk.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -18,7 +19,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AssetController {
     private final AssetService assets;
     private final UserService users;
-    public AssetController(AssetService assets, UserService users) { this.assets = assets; this.users = users; }
+    private final Guide guide;
+    public AssetController(AssetService assets, UserService users, Guide guide) { this.assets = assets; this.users = users; this.guide = guide; }
 
     @GetMapping
     String list(Authentication auth, @RequestParam(required=false) Long owner, Model model) {
@@ -95,9 +97,12 @@ public class AssetController {
     }
 
     @PostMapping("/{id}/assign")
-    String assign(Authentication auth, @PathVariable long id, @RequestParam(required=false) Long owner, RedirectAttributes flash) {
+    String assign(Authentication auth, @PathVariable long id, @RequestParam(required=false) Long owner, RedirectAttributes flash,
+                  HttpServletRequest request) {
         try {
-            assets.assign(users.current(auth), id, owner);
+            var me = users.current(auth);
+            assets.assign(me, id, owner);
+            guide.done(request, me, "equipment");
             flash.addFlashAttribute("success", "Equipment assigned to " + users.find(owner).name() + ".");
         } catch (ValidationProblem problem) {
             flash.addFlashAttribute("errors", problem.fields());
