@@ -23,9 +23,11 @@ Nothing is written to disk. A restart empties everything and rebuilds the templa
 
 ## Hosting
 
-`deploy/huggingface/` holds a Docker Space definition. It builds the app from a pinned commit of this repository and runs it as an unprivileged user with `--spring.profiles.active=hosted`. HTTPS ends at the host's proxy. Redirects are relative, and the session cookie is `Secure`.
+`render.yaml` and `deploy/render/Dockerfile` run it as a free [Render](https://render.com) web service. The image is built from this repository and runs as an unprivileged user with `--spring.profiles.active=hosted`, with the heap sized for the free plan's 512 MB. HTTPS ends at Render's proxy. Redirects are relative, and the session cookie is `Secure`.
 
-Free hosting has limits. A Space that gets no visits for about two days goes to sleep, and the first visit afterwards waits while it starts. Its address and restarts are controlled by the host.
+Free hosting has limits. After 15 minutes without visitors the service is stopped, and the next visitor waits about a minute while Render starts it again (and everyone's sandboxes are gone, as after any restart). The free plan has a small share of a CPU, so the demo is slower than running it locally. Per-visitor address limits stay off (`trusted-proxy-hops=0`) until the proxy chain has been checked; the overall limits still apply.
+
+To deploy your own copy: sign in to Render, choose **New > Blueprint**, and point it at this repository.
 
 ## Running it locally
 

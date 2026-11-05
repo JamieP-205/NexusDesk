@@ -52,6 +52,17 @@ class HostedDemoTest {
         return Long.parseLong(location.substring(location.lastIndexOf('/') + 1));
     }
 
+    @Autowired org.springframework.security.crypto.password.PasswordEncoder passwords;
+
+    @Test void onlyThePublicDemoPasswordReusesItsHash() {
+        String demo = dev.jamie.nexusdesk.config.DemoData.PUBLIC_PASSWORD;
+        assertThat(passwords.encode(demo)).isEqualTo(passwords.encode(demo)).startsWith("{pbkdf2-sha256}");
+        assertThat(passwords.matches(demo, passwords.encode(demo))).isTrue();
+        // Any other password still gets its own salt.
+        assertThat(passwords.encode("Another-pass-456")).isNotEqualTo(passwords.encode("Another-pass-456"));
+        assertThat(passwords.matches("wrong", passwords.encode(demo))).isFalse();
+    }
+
     @Test void theSignInPageOffersOneClickRolesAndNoSharedPassword() throws Exception {
         mvc.perform(get("/login")).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Try the demo")))

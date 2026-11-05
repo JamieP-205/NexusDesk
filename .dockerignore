@@ -1,0 +1,8 @@
+.git
+.github
+target
+dist
+data
+docs
+scripts
+*.cmd

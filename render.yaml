@@ -1,0 +1,17 @@
+# The public browser demo on Render's free plan (see docs/hosted-demo.md).
+services:
+  - type: web
+    name: nexusdesk-demo
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    dockerfilePath: ./deploy/render/Dockerfile
+    dockerContext: .
+    healthCheckPath: /login
+    envVars:
+      # Fewer visitors and threads than the defaults, to suit 512 MB and a small CPU share.
+      - key: NEXUSDESK_HOSTED_MAX_SANDBOXES
+        value: "80"
+      - key: SERVER_TOMCAT_THREADS_MAX
+        value: "20"
