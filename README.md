@@ -24,6 +24,10 @@ I wrote the brief myself as practice, for a fictional company called Northstar D
 
 **The ticket rule:** an Open ticket never has a technician, and every other status always has one. If you pick a technician on an Open ticket, the form switches the status to Assigned for you (and says so); the server enforces the same rule and explains it beside the field if the two don't match. Reopening returns a ticket to the queue unassigned, and earlier fixes stay in its history.
 
+## Try it in your browser
+
+**[Open the browser demo](https://nexusdesk-demo-1tl6.onrender.com)** and choose Employee, Technician or Administrator. You don't need an account or a password. Each visitor gets a private in-memory copy of the fictional data. **View as** switches role and **Reset demo** starts again; your copy is deleted after an hour without activity. It runs on Render's free plan, which sleeps after 15 minutes without visitors, so the first visit after that takes about a minute. [How the browser demo works](docs/hosted-demo.md).
+
 ## Download and run the demo
 
 The [latest release](https://github.com/JamieP-205/NexusDesk/releases/latest) has `NexusDesk-0.2.1-demo.zip`. You need **Java 17 or newer** ([Eclipse Temurin](https://adoptium.net/) is a good choice; check with `java -version`). Extract the whole ZIP, then double-click **Start demo.cmd**, or open a terminal in the extracted folder and run:
@@ -76,7 +80,7 @@ The first start creates that administrator if the database has no accounts. Sett
 ## Build and test
 
 ```powershell
-.\mvnw.cmd verify             # 83 tests: services, HTTP and security, concurrency, migrations, demo and hosted profiles
+.\mvnw.cmd verify             # 87 tests: services, HTTP and security, concurrency, migrations, demo and hosted profiles
 python scripts\smoke_test.py  # packaged app over HTTP: sign-in, rules, throttling, paging, restart, backup/restore
 ```
 

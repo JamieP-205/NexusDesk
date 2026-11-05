@@ -17,6 +17,14 @@ final class SandboxFilter extends OncePerRequestFilter {
 
     SandboxFilter(SandboxRegistry registry) { this.registry = registry; }
 
+    /**
+     * Error pages (403, 404, 500) are rendered in a second pass, after this filter has finished the
+     * first. That pass needs the sandbox too, or the account check finds no such user and signs the
+     * visitor out.
+     */
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() { return false; }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {

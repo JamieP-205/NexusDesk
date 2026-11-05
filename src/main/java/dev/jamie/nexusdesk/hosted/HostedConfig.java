@@ -47,6 +47,9 @@ public class HostedConfig {
         var bean = new FilterRegistrationBean<>(new SandboxFilter(registry));
         // Before Spring Security, which reads accounts from the database.
         bean.setOrder(SecurityProperties.DEFAULT_FILTER_ORDER - 10);
+        // Spring Security also runs on error pages, so the sandbox must be bound there as well.
+        bean.setDispatcherTypes(jakarta.servlet.DispatcherType.REQUEST, jakarta.servlet.DispatcherType.ERROR,
+                jakarta.servlet.DispatcherType.ASYNC);
         return bean;
     }
 

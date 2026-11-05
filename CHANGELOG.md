@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased (browser demo only)
+
+Made by Claude (Anthropic's AI assistant) in Claude Code at Jamie's request.
+
+- The browser demo now runs on Render's free plan (`render.yaml`); Hugging Face Docker Spaces need a paid plan.
+- Fixed: in the browser demo, opening a page you weren't allowed to see, or one that didn't exist, signed you out and deleted your copy of the data. Error pages are rendered in a second pass that didn't see the visitor's sandbox.
+- The browser demo hashes the published demo password once when preparing its data, instead of six times an hour.
+
 ## 0.2.1 — 5 November 2026
 
 Made by Claude (Anthropic's AI assistant) in Claude Code at Jamie's request.
