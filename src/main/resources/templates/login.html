@@ -19,7 +19,11 @@
         <p th:if="${param.error}" class="error-note" role="alert">
           The email or password wasn't recognised.
         </p>
-        <p th:if="${param.logout}" class="notice">You're signed out.</p>
+        <p th:if="${lockedMinutes != null}" class="error-note" role="alert"
+           th:text="${'Too many failed sign-in attempts. For your security, wait ' + (lockedMinutes == 1 ? 'a minute' : lockedMinutes + ' minutes') + ' and try again.'}">
+          Too many failed sign-in attempts. Wait and try again.
+        </p>
+        <p th:if="${param.logout}" class="notice" role="status">You're signed out.</p>
         <p th:if="${param.expired}" class="notice">
           Your account changed or your session ended. Please sign in again.
         </p>
@@ -27,6 +31,7 @@
           <label
             >Email address<input
               name="username"
+              autofocus
               type="email"
               autocomplete="username"
               required
@@ -46,6 +51,18 @@
           </button>
         </form>
         <p class="small muted">Need an account? Ask your IT administrator.</p>
+        <section class="demo-accounts" th:if="${demoMode}" aria-labelledby="demo-heading">
+          <h3 id="demo-heading">Demo accounts</h3>
+          <p class="small">
+            Fictional data for trying the app. Every account uses the public
+            password <code>Demo-password-123</code>.
+          </p>
+          <ul class="small">
+            <li><code>admin@example.test</code> administrator</li>
+            <li><code>tech@example.test</code> IT technician</li>
+            <li><code>employee@example.test</code> employee</li>
+          </ul>
+        </section>
       </section>
     </main>
   </body>

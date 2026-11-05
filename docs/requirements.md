@@ -30,4 +30,4 @@ All technician comments in this version are visible to the ticket creator. There
 
 I count open workload as every ticket outside Resolved/Closed. Critical counts only active critical tickets. Recently resolved means the rolling previous seven days and excludes tickets that were reopened. Dates shown in the interface use the server's local timezone.
 
-I allow a return from Resolved/Closed to Open; reopening clears the assignee and current resolution timestamp. I keep previous resolution text in history. An unchanged closed status is accepted without adding a duplicate status event.
+I allow a return from Resolved/Closed to Open; reopening clears the assignee and current resolution timestamp (since 0.2.0 the form must say Unassigned, and the server explains this instead of clearing it silently). I keep previous resolution text in history. An unchanged closed status is accepted without adding a duplicate status event.

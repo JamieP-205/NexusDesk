@@ -55,8 +55,41 @@ class AssetServiceTest {
         assertThatThrownBy(() -> assets.assign(admin, id, employee.id())).isInstanceOf(Problem.class);
     }
     @Test void validatesSerialDateAndStaleVersion() {
-        assertThatThrownBy(() -> assets.create(admin, "Laptop", "Dell", "Test", "TEST-1", LocalDate.now())).isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> assets.create(admin, "Laptop", "Dell", "Test", "TEST-1", LocalDate.now()))
+                .isInstanceOf(ValidationProblem.class).satisfies(e -> assertThat(((ValidationProblem) e).fields()).containsKey("serial"));
+        // The UNIQUE constraint still backs up the check if two requests race.
+        assertThatThrownBy(() -> db.update("INSERT INTO assets(type,manufacturer,model,serial_number,purchase_date) VALUES ('Laptop','Dell','X','TEST-1',CURRENT_DATE)"))
+                .isInstanceOf(DataIntegrityViolationException.class);
         assertThatThrownBy(() -> assets.create(admin, "Laptop", "Dell", "Test", "TEST-2", LocalDate.now().plusDays(1))).isInstanceOf(Problem.class);
-        assertThatThrownBy(() -> assets.edit(admin, id, 9, "Laptop", "Lenovo", "E14", "TEST-1", LocalDate.now(), "Available")).isInstanceOf(Problem.class);
+        assertThatThrownBy(() -> assets.edit(admin, id, 9, "Laptop", "Lenovo", "E14", "TEST-1", LocalDate.now(), "Available"))
+                .isInstanceOf(Problem.class).extracting(e -> ((Problem) e).status()).isEqualTo(409);
+        assertThatThrownBy(() -> assets.create(admin, "Laptop", "Dell", "Test", "TEST-3", null))
+                .isInstanceOf(ValidationProblem.class).satisfies(e -> assertThat(((ValidationProblem) e).fields()).containsKey("purchaseDate"));
+    }
+    @Test void unchangedEditWritesNothing() {
+        var before = assets.get(admin, id);
+        assertThat(assets.edit(admin, id, before.version(), before.type(), before.manufacturer(), before.model(),
+                before.serialNumber(), before.purchaseDate(), before.status())).isFalse();
+        assertThat(assets.get(admin, id).version()).isEqualTo(before.version());
+    }
+    @Test void assignedEquipmentCantBeMarkedAvailableOrGivenToADisabledPerson() {
+        assets.assign(admin, id, employee.id());
+        var asset = assets.get(admin, id);
+        assertThatThrownBy(() -> assets.edit(admin, id, asset.version(), "Laptop", "Lenovo", "E14", "TEST-1", LocalDate.now(), "Available"))
+                .isInstanceOf(ValidationProblem.class);
+        assets.returnAsset(admin, id);
+        db.update("UPDATE users SET enabled=FALSE WHERE id=?", employee.id());
+        assertThatThrownBy(() -> assets.assign(admin, id, employee.id())).isInstanceOf(ValidationProblem.class);
+        assertThatThrownBy(() -> assets.assign(admin, id, null)).isInstanceOf(ValidationProblem.class);
+    }
+    @Test void returningKeepsEveryPreviousAssignment() {
+        assets.assign(admin, id, employee.id());
+        assets.returnAsset(admin, id);
+        assets.assign(admin, id, admin.id());
+        assets.returnAsset(admin, id);
+        var history = assets.history(admin, id);
+        assertThat(history).hasSize(2).allSatisfy(row -> assertThat(row.returnedAt()).isNotNull());
+        assertThat(db.queryForObject("SELECT COUNT(*) FROM asset_assignments WHERE asset_id=? AND returned_at IS NULL", Integer.class, id)).isZero();
+        assertThat(assets.get(admin, id).status()).isEqualTo("Available");
     }
 }

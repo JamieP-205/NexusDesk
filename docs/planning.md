@@ -32,7 +32,7 @@ Sources the build relied on (checked during the Codex session on 1 October 2026)
 
 - [Spring JDBC](https://docs.spring.io/spring-framework/reference/data-access/jdbc/core.html): prepared parameters, row mapping and connection handling.
 - [Spring Security CSRF](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html): keep protection enabled on state-changing forms.
-- [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html): salted adaptive hashes. The plan was PBKDF2-HMAC-SHA256 with 600,000 iterations because Spring supports it without another crypto dependency. The code actually ended up using HMAC-SHA1 through a deprecated constructor; see [SECURITY.md](../SECURITY.md). Argon2id is OWASP’s first choice.
+- [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html): salted adaptive hashes. The plan was PBKDF2-HMAC-SHA256 with 600,000 iterations because Spring supports it without another crypto dependency. The code actually ended up using HMAC-SHA1 through a deprecated constructor; version 0.2.0 switched to SHA-256 and upgrades old hashes at sign-in (see [SECURITY.md](../SECURITY.md)). Argon2id is OWASP’s first choice.
 - [H2 features](https://h2database.com/html/features.html): embedded file storage and transactions. A PostgreSQL move needs separate migration and concurrency testing.
 
 ## Build provenance

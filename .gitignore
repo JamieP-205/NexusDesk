@@ -8,3 +8,7 @@
 .DS_Store
 /playwright-report/
 /test-results/
+/.playwright-mcp/
+/backups/
+__pycache__/
+*.py[cod]

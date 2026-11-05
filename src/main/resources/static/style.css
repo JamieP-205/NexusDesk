@@ -955,3 +955,153 @@ dd {
     background: white;
   }
 }
+
+/* Added in 0.2.0: validation, notices, pagination, demo marker, skip link */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  background: var(--lime);
+  color: var(--dark);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 12px;
+}
+.notice.info {
+  background: #eef3f7;
+  border-color: #d3dfe8;
+  color: #2f4a5c;
+}
+.notice.warning {
+  background: #fcecef;
+  border-color: #f0c9cf;
+  color: #7c1f29;
+}
+.error-summary ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+.error-summary a {
+  color: inherit;
+  text-decoration: underline;
+}
+.error-summary:focus {
+  outline: 3px solid #c75661;
+  outline-offset: 2px;
+}
+.field-error {
+  color: #9b242e;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 6px 0 0;
+}
+[aria-invalid="true"] {
+  border-color: #b3333f;
+  box-shadow: 0 0 0 1px #b3333f;
+}
+.help.live:empty {
+  display: none;
+}
+.help.live {
+  color: #2f4a5c;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e9eee9;
+  font-size: 0.875rem;
+}
+.pagination ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pagination a,
+.pagination .disabled,
+.pagination .gap {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 6px;
+}
+.pagination a {
+  border: 1px solid var(--line);
+}
+.pagination a:hover {
+  background: var(--soft);
+  text-decoration: none;
+}
+.pagination a.current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+.pagination .disabled {
+  color: #9aa6a0;
+}
+.result-range {
+  margin: 0;
+  padding: 0 24px 12px;
+}
+.demo-flag {
+  margin: 18px 0 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #3a3412;
+  color: #f4e7a1;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.demo-accounts {
+  margin-top: 8px;
+  padding: 14px 16px;
+  border: 1px dashed #c9d6cc;
+  border-radius: 8px;
+  background: #f8faf6;
+}
+.demo-accounts h3 {
+  margin-bottom: 6px;
+}
+.demo-accounts p,
+.demo-accounts ul {
+  margin: 0 0 6px;
+}
+.demo-accounts ul {
+  padding-left: 18px;
+}
+code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+  background: #eef2ee;
+  padding: 1px 5px;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.error-panel ul {
+  margin-top: 0;
+}
+@media (max-width: 760px) {
+  .demo-flag {
+    margin-top: 12px;
+  }
+  .pagination {
+    padding: 14px 16px;
+  }
+  .result-range {
+    padding: 0 16px 10px;
+  }
+}

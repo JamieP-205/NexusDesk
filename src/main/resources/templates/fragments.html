@@ -5,14 +5,17 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title th:text="${title + ' · NexusDesk'}">NexusDesk</title>
     <link rel="stylesheet" th:href="@{/style.css}" />
+    <script th:src="@{/app.js}" defer></script>
   </head>
   <body>
-    <aside class="sidebar" th:fragment="nav(active)">
+    <aside class="sidebar" th:fragment="sidebar(active)">
+      <a class="skip-link" href="#main">Skip to content</a>
       <a class="brand" href="/" aria-label="NexusDesk home"
         ><span class="brand-mark">N</span>NexusDesk<span class="brand-dot"
           >.</span
         ></a
       >
+      <p class="demo-flag" th:if="${demoMode}">Demo data · fictional records</p>
       <p class="workspace-label">NORTHSTAR / IT WORKSPACE</p>
       <nav aria-label="Main navigation">
         <a
@@ -38,20 +41,65 @@
         <div class="avatar" th:text="${#strings.substring(me.name,0,1)}">J</div>
         <div>
           <strong th:text="${me.name}">Name</strong
-          ><small th:text="${me.role}">Role</small>
+          ><small th:text="${me.role == 'ADMIN' ? 'ADMINISTRATOR' : me.role}">Role</small>
         </div>
         <form th:action="@{/logout}" method="post">
           <button class="text-button" type="submit">Sign out</button>
         </form>
       </div>
     </aside>
-    <div
-      th:fragment="notice"
-      th:if="${success}"
-      class="notice"
-      role="status"
-      th:text="${success}"
-    ></div>
+    <th:block th:fragment="notice">
+      <div th:if="${success}" class="notice" role="status" th:text="${success}"></div>
+      <div th:if="${info}" class="notice info" role="status" th:text="${info}"></div>
+      <div th:if="${error}" class="notice warning" role="alert" th:text="${error}"></div>
+      <div
+        th:unless="${#maps.isEmpty(errors)}"
+        class="notice warning error-summary"
+        role="alert"
+        tabindex="-1"
+        id="error-summary"
+      >
+        <strong
+          th:text="${#maps.size(errors) == 1 ? 'That wasn''t saved. Check this:' : 'That wasn''t saved. Check these ' + #maps.size(errors) + ' things:'}"
+        ></strong>
+        <ul>
+          <li th:each="e : ${errors}">
+            <a th:href="${'#' + e.key}" th:text="${e.value}"></a>
+          </li>
+        </ul>
+      </div>
+    </th:block>
+    <p
+      th:fragment="fieldError(name)"
+      th:if="${errors.get(name) != null}"
+      class="field-error"
+      th:id="${name + '-error'}"
+      th:text="${errors.get(name)}"
+    ></p>
+    <nav
+      th:fragment="pagination(pager, links)"
+      class="pagination"
+      aria-label="Ticket pages"
+      th:if="${pager.totalPages() > 1}"
+    >
+      <a th:if="${links['previous']}" th:href="${links['previous']}" rel="prev">← Previous</a
+      ><span th:unless="${links['previous']}" class="disabled" aria-hidden="true">← Previous</span>
+      <ol>
+        <li th:each="n : ${links['numbers']}">
+          <span th:if="${n.gap}" class="gap" aria-hidden="true">…</span>
+          <a
+            th:unless="${n.gap}"
+            th:href="${n.url}"
+            th:text="${n.number}"
+            th:aria-current="${n.current} ? 'page'"
+            th:aria-label="${'Page ' + n.number}"
+            th:classappend="${n.current} ? 'current'"
+          ></a>
+        </li>
+      </ol>
+      <a th:if="${links['next']}" th:href="${links['next']}" rel="next">Next →</a
+      ><span th:unless="${links['next']}" class="disabled" aria-hidden="true">Next →</span>
+    </nav>
     <div class="table-wrap" th:fragment="ticketTable(rows)">
       <table>
         <thead>
@@ -99,8 +147,17 @@
         </tbody>
       </table>
       <div class="empty" th:if="${#lists.isEmpty(rows)}">
-        <h3>No tickets here yet</h3>
-        <p>Create a ticket or try a different filter.</p>
+        <th:block th:if="${filtered}">
+          <h3>No tickets match these filters</h3>
+          <p>Try fewer filters, or <a href="/tickets">clear them all</a>.</p>
+        </th:block>
+        <th:block th:unless="${filtered}">
+          <h3 th:text="${me.isStaff() ? 'The queue is empty' : 'You have no tickets yet'}">No tickets here yet</h3>
+          <p>
+            <a href="/tickets/new">Create a ticket</a>
+            <span th:text="${me.isStaff() ? ' when someone reports a problem.' : ' if something needs IT''s help.'}"></span>
+          </p>
+        </th:block>
       </div>
     </div>
   </body>

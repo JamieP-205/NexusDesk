@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AssetService {
+    public static final List<String> STATUSES = List.of("Available", "Assigned", "Repair", "Retired");
+    public static final String STALE = "Someone else saved this asset while you were editing it. Nothing was saved.";
     private final JdbcTemplate db;
     private final UserService users;
     private static final DataClassRowMapper<Asset> MAPPER = new DataClassRowMapper<>(Asset.class);
@@ -32,36 +34,52 @@ public class AssetService {
         return asset;
     }
     @Transactional
-    public void create(Account actor, String type, String manufacturer, String model, String serial, LocalDate purchaseDate) {
+    public long create(Account actor, String type, String manufacturer, String model, String serial, LocalDate purchaseDate) {
         Rules.admin(actor);
-        validate(type, manufacturer, model, serial, purchaseDate);
+        var v = new Validation();
+        Clean clean = validate(v, null, type, manufacturer, model, serial, purchaseDate);
+        v.check();
         db.update("INSERT INTO assets(type,manufacturer,model,serial_number,purchase_date) VALUES (?,?,?,?,?)",
-                type, manufacturer.strip(), model.strip(), serial.strip(), purchaseDate);
+                type, clean.manufacturer(), clean.model(), clean.serial(), purchaseDate);
+        return db.queryForObject("SELECT id FROM assets WHERE serial_number=?", Long.class, clean.serial());
     }
+    /** Returns false when the submitted details match what is already stored, so nothing was written. */
     @Transactional
-    public void edit(Account actor, long id, int version, String type, String manufacturer, String model,
-                     String serial, LocalDate purchaseDate, String status) {
+    public boolean edit(Account actor, long id, int version, String type, String manufacturer, String model,
+                        String serial, LocalDate purchaseDate, String status) {
         Rules.admin(actor);
-        validate(type, manufacturer, model, serial, purchaseDate);
         lock(id);
         Asset old = get(actor, id);
-        Rules.choice(status, List.of("Available", "Assigned", "Repair", "Retired"), "asset status");
-        if (old.ownerId() != null && !status.equals("Assigned")) throw Problem.invalid("Return the asset before changing its status.");
-        if (old.ownerId() == null && status.equals("Assigned")) throw Problem.invalid("Use Assign to give this asset an owner.");
-        if (db.update("UPDATE assets SET type=?,manufacturer=?,model=?,serial_number=?,purchase_date=?,status=?,version=version+1 WHERE id=? AND version=?",
-                type, manufacturer.strip(), model.strip(), serial.strip(), purchaseDate, status, id, version) != 1) {
-            throw new Problem(409, "This asset changed. Reload it before saving.");
+        if (old.version() != version) throw Problem.conflict(STALE);
+        var v = new Validation();
+        Clean clean = validate(v, id, type, manufacturer, model, serial, purchaseDate);
+        if (v.choice("status", status, STATUSES, "asset status") != null) {
+            if (old.ownerId() != null && !status.equals("Assigned")) v.reject("status", "Return the asset to stock before changing its status.");
+            if (old.ownerId() == null && status.equals("Assigned")) v.reject("status", "Use Assign equipment to give this asset an owner.");
         }
+        v.check();
+        if (type.equals(old.type()) && clean.manufacturer().equals(old.manufacturer()) && clean.model().equals(old.model())
+                && clean.serial().equals(old.serialNumber()) && purchaseDate.equals(old.purchaseDate()) && status.equals(old.status())) {
+            return false;
+        }
+        if (db.update("UPDATE assets SET type=?,manufacturer=?,model=?,serial_number=?,purchase_date=?,status=?,version=version+1 WHERE id=? AND version=?",
+                type, clean.manufacturer(), clean.model(), clean.serial(), purchaseDate, status, id, version) != 1) {
+            throw Problem.conflict(STALE);
+        }
+        return true;
     }
     @Transactional
-    public void assign(Account actor, long id, long owner) {
+    public void assign(Account actor, long id, Long owner) {
         Rules.admin(actor);
         lock(id);
         Asset asset = get(actor, id);
-        if (!asset.status().equals("Available") || asset.ownerId() != null) throw Problem.invalid("Only available assets can be assigned.");
+        if (asset.ownerId() != null) throw ValidationProblem.of("owner", "This asset is already assigned to " + asset.ownerName() + ". Return it to stock first.");
+        if (!asset.status().equals("Available")) throw ValidationProblem.of("owner", "Only available assets can be assigned. This one is marked " + asset.status() + ".");
+        if (owner == null) throw ValidationProblem.of("owner", "Choose who will receive this equipment.");
         db.queryForList("SELECT id FROM users WHERE id=? FOR UPDATE", owner);
-        Account person = users.find(owner);
-        if (!person.enabled()) throw Problem.invalid("Choose an enabled user.");
+        Account person = users.findOrNull(owner);
+        if (person == null || !person.enabled()) throw ValidationProblem.of("owner", "Choose an enabled person.");
+        // The one_current_owner unique constraint is the last line of defence if two requests race past the lock.
         db.update("INSERT INTO asset_assignments(asset_id,user_id,assigned_by) VALUES (?,?,?)", id, owner, actor.id());
         db.update("UPDATE assets SET status='Assigned',version=version+1 WHERE id=?", id);
     }
@@ -69,22 +87,33 @@ public class AssetService {
     public void returnAsset(Account actor, long id) {
         Rules.admin(actor);
         lock(id);
-        if (get(actor, id).ownerId() == null) throw Problem.invalid("This asset is not assigned.");
+        if (get(actor, id).ownerId() == null) throw Problem.invalid("This asset is not assigned, so there is nothing to return.");
+        // Returning closes the current assignment row; it never deletes it, so the history stays intact.
         db.update("UPDATE asset_assignments SET returned_at=CURRENT_TIMESTAMP WHERE asset_id=? AND returned_at IS NULL", id);
         db.update("UPDATE assets SET status='Available',version=version+1 WHERE id=?", id);
     }
-    public List<java.util.Map<String, Object>> history(Account actor, long id) {
+    public List<Assignment> history(Account actor, long id) {
         Rules.staff(actor);
         get(actor, id);
-        return db.queryForList("""
+        return db.query("""
                 SELECT u.name, aa.assigned_at, aa.returned_at FROM asset_assignments aa
                 JOIN users u ON aa.user_id=u.id WHERE aa.asset_id=? ORDER BY aa.id DESC
-                """, id);
+                """, new DataClassRowMapper<>(Assignment.class), id);
     }
     private void lock(long id) { db.queryForList("SELECT id FROM assets WHERE id=? FOR UPDATE", id); }
-    private void validate(String type, String maker, String model, String serial, LocalDate date) {
-        Rules.choice(type, Rules.ASSET_TYPES, "asset type"); Rules.text(maker, "Manufacturer", 80);
-        Rules.text(model, "Model", 100); Rules.text(serial, "Serial number", 100);
-        if (date == null || date.isAfter(LocalDate.now())) throw Problem.invalid("Use a purchase date today or earlier.");
+
+    private record Clean(String manufacturer, String model, String serial) {}
+    private Clean validate(Validation v, Long id, String type, String maker, String model, String serial, LocalDate date) {
+        v.choice("type", type, Rules.ASSET_TYPES, "asset type");
+        String cleanMaker = v.text("manufacturer", maker, "Manufacturer", 80);
+        String cleanModel = v.text("model", model, "Model", 100);
+        String cleanSerial = v.text("serial", serial, "Serial number", 100);
+        if (date == null) v.reject("purchaseDate", "Enter the purchase date.");
+        else if (date.isAfter(LocalDate.now())) v.reject("purchaseDate", "Use a purchase date today or earlier.");
+        if (cleanSerial != null && db.queryForObject("SELECT COUNT(*) FROM assets WHERE serial_number=? AND id<>?", Integer.class,
+                cleanSerial, id == null ? -1L : id) > 0) {
+            v.reject("serial", "Another asset already has this serial number.");
+        }
+        return new Clean(cleanMaker, cleanModel, cleanSerial);
     }
 }

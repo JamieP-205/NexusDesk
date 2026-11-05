@@ -78,7 +78,7 @@ stateDiagram-v2
     Closed --> Open
 ```
 
-I need an active assignee for any state after Open, plus resolution text for Resolved and Closed. Reopening clears the current assignment, but earlier events and fixes stay in the history.
+An Open ticket never has a technician, and every state after Open needs an active one (keeping a technician who has since left IT is allowed, so finished work can still be closed). Resolved and Closed need resolution text. Reopening returns the ticket to Open and unassigned, but earlier events and fixes stay in the history. Since 0.2.0 a mismatch is rejected with an explanation instead of the technician being silently dropped.
 
 ## Navigation and wireframes
 

@@ -24,3 +24,15 @@ At the end of the session it split the work into the commits you see in the hist
 The 23-test suite had passed in Codex's environment, and the GitHub Java 17 and 21 jobs then passed too. Codex added a smoke script that checks the packaged JAR through real HTTP requests and restarts it against the same file database. That check passed, including ownership restrictions, ticket progression and retained comments/resolution.
 
 Codex then added the demo screenshots, setup instructions, diagrams and repository files, and opened issues #1 and #2 and the pull request. The pull request was merged with a merge commit, so the individual commits are kept rather than squashed.
+
+## 4–5 November 2026: version 0.2.0 (Claude)
+
+Claude (Anthropic's AI assistant) worked on the `claude/finish-nexusdesk` branch in Claude Code, starting from an earlier review's findings and checking each one before changing anything.
+
+- **Assignment bug.** Confirmed in `TicketService.update`: `if (status.equals("Open")) assignee = null;` discarded the technician while the page said "Ticket updated". Replaced with an explicit rule enforced by the server and mirrored in the form.
+- **Password hashing.** Confirmed the deprecated constructor used HMAC-SHA1. The first attempt to verify old hashes with Spring's replacement constructor failed a test: choosing SHA-1 there also shrinks the output to 160 bits, so it can't reproduce 0.1.0's hashes. A small JDK-based verifier fixed that, and the upgrade was tested on a copy of a real 0.1.0 demo database.
+- **Smoke test failing on Windows.** The existing smoke test failed after its restart step. Cause: on Windows `terminate()` is a hard kill, and H2's default 500 ms write delay lost the last committed writes. Fixed with `WRITE_DELAY=0`.
+- **Automated security review.** A review of the first throttling commit flagged that a URL-matching filter could be sidestepped and that simultaneous guesses could slip past the count. The throttle moved inside the authentication provider and now counts in-flight attempts.
+- **Found by using the app in a browser:** inline field messages never rendered (SpEL read `errors[name]` as the literal key "name"); any asset with assignment history showed the error page (`java.sql.Timestamp` can't be formatted by `#temporals`); re-saving after a conflict could undo the other person's change; sign-in took about two seconds under `spring-boot:run` because it limits the JIT compiler; and `demo.cmd` failed where `cmd` doesn't search the current folder. Each now has a fix and, where testable, a test.
+
+The suite grew from 23 to 72 tests, and the smoke test now covers throttling, pagination, a restart and a backup/restore cycle.

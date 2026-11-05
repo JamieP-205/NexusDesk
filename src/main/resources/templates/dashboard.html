@@ -2,8 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head th:replace="~{fragments :: head('Overview')}"></head>
   <body>
-    <aside th:replace="~{fragments :: nav('dashboard')}"></aside>
-    <main class="main">
+    <aside th:replace="~{fragments :: sidebar('dashboard')}"></aside>
+    <main class="main" id="main">
       <div class="topline">
         <span>WORKSPACE / OVERVIEW</span
         ><span>Northstar Digital Solutions</span>
@@ -82,7 +82,7 @@
         </div>
         <div th:replace="~{fragments :: ticketTable(${recent})}"></div>
       </section>
-      <footer>NexusDesk <span>Personal project · v0.1.0</span></footer>
+      <footer>NexusDesk <span>Practice project · v0.2.0</span></footer>
     </main>
   </body>
 </html>

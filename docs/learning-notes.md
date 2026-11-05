@@ -10,7 +10,7 @@ I need to be able to change and explain this project, not just run it. I’m usi
 6. I’ll assign, return and reassign one device. I’ll check that all assignment rows still exist.
 7. I’ll run one test class and make a small feature change with a test of my own.
 
-A sensible first change is field-level validation feedback. It would make the app nicer while teaching me form binding and server-side validation without adding a whole new service.
+Field-level validation and pagination were added in 0.2.0 (by Claude), so they're no longer good first changes. The [walkthrough](walkthrough.md) explains the request flow, permissions, transactions, ticket states and passwords, and ends with exercises; exercise 6 is a good first change of my own.
 
 ## Reflection to fill in after I do that
 

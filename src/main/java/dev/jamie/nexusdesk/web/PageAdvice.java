@@ -17,9 +17,17 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 public class PageAdvice {
     private static final Logger LOG = LoggerFactory.getLogger(PageAdvice.class);
     private final UserService users;
-    public PageAdvice(UserService users) { this.users = users; }
+    private final boolean demo;
+    public PageAdvice(UserService users, org.springframework.core.env.Environment env) {
+        this.users = users;
+        this.demo = env.matchesProfiles("demo");
+    }
     @ModelAttribute void common(Authentication auth, Model model) {
         if (auth != null && !(auth instanceof AnonymousAuthenticationToken)) model.addAttribute("me", users.current(auth));
+        model.addAttribute("demoMode", demo);
+        // Forms read these on every page; controllers replace them when a submission fails.
+        if (!model.containsAttribute("errors")) model.addAttribute("errors", java.util.Map.of());
+        if (!model.containsAttribute("form")) model.addAttribute("form", java.util.Map.of());
         model.addAttribute("categories", Rules.CATEGORIES);
         model.addAttribute("priorities", Rules.PRIORITIES);
         model.addAttribute("statuses", Rules.STATUSES);
@@ -27,7 +35,9 @@ public class PageAdvice {
     }
     @ExceptionHandler(Problem.class)
     String problem(Problem error, HttpServletResponse response, Model model) {
-        response.setStatus(error.status()); model.addAttribute("message", error.getMessage()); return "error";
+        response.setStatus(error.status()); model.addAttribute("message", error.getMessage());
+        if (error instanceof ValidationProblem validation) model.addAttribute("details", validation.fields().values());
+        return "error";
     }
     @ExceptionHandler(DataIntegrityViolationException.class)
     String duplicate(HttpServletResponse response, Model model) {
