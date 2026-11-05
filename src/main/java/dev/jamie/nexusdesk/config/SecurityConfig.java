@@ -25,11 +25,12 @@ public class SecurityConfig {
      * the password service lets Spring rehash old SHA-1 hashes after a successful sign-in.
      */
     @Bean
-    AuthenticationProvider authenticationProvider(AccountDetailsService accounts, PasswordEncoder passwords, LoginThrottle throttle) {
+    AuthenticationProvider authenticationProvider(AccountDetailsService accounts, PasswordEncoder passwords, LoginThrottle throttle,
+                                                  org.springframework.beans.factory.ObjectProvider<ThrottleKey> keys) {
         var dao = new DaoAuthenticationProvider(accounts);
         dao.setPasswordEncoder(passwords);
         dao.setUserDetailsPasswordService(accounts);
-        return new ThrottledAuthenticationProvider(dao, throttle);
+        return new ThrottledAuthenticationProvider(dao, throttle, keys.getIfAvailable(() -> address -> address));
     }
 
     @Bean
@@ -40,7 +41,7 @@ public class SecurityConfig {
                 exception instanceof ThrottledAuthenticationProvider.Throttled throttled
                         ? "/login?locked=" + throttled.minutes() : "/login?error");
         return http.authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/login", "/style.css", "/app.js", "/error").permitAll()
+                    .requestMatchers("/login", "/style.css", "/app.js", "/error", "/demo/start").permitAll()
                     .requestMatchers("/users/**").hasRole("ADMIN")
                     .anyRequest().authenticated())
                 .formLogin(login -> login.loginPage("/login").defaultSuccessUrl("/", true).failureHandler(failure).permitAll())

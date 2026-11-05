@@ -18,13 +18,16 @@ public class PageAdvice {
     private static final Logger LOG = LoggerFactory.getLogger(PageAdvice.class);
     private final UserService users;
     private final boolean demo;
+    private final boolean hosted;
     public PageAdvice(UserService users, org.springframework.core.env.Environment env) {
         this.users = users;
         this.demo = env.matchesProfiles("demo");
+        this.hosted = env.matchesProfiles("hosted");
     }
     @ModelAttribute void common(Authentication auth, Model model) {
         if (auth != null && !(auth instanceof AnonymousAuthenticationToken)) model.addAttribute("me", users.current(auth));
         model.addAttribute("demoMode", demo);
+        model.addAttribute("hostedMode", hosted);
         // Forms read these on every page; controllers replace them when a submission fails.
         if (!model.containsAttribute("errors")) model.addAttribute("errors", java.util.Map.of());
         if (!model.containsAttribute("form")) model.addAttribute("form", java.util.Map.of());

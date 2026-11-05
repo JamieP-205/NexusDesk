@@ -18,9 +18,12 @@ public class UserService {
     private static final DataClassRowMapper<Account> MAPPER = new DataClassRowMapper<>(Account.class);
     private static final String COLUMNS = "id, name, email, role, enabled";
 
-    public UserService(JdbcTemplate db, PasswordEncoder passwords) {
+    private final RecordLimits limits;
+
+    public UserService(JdbcTemplate db, PasswordEncoder passwords, org.springframework.beans.factory.ObjectProvider<RecordLimits> limits) {
         this.db = db;
         this.passwords = passwords;
+        this.limits = limits.getIfAvailable(() -> RecordLimits.NONE);
     }
     public Account current(Authentication auth) {
         if (auth == null) throw new Problem(401, "Please sign in again.");
@@ -58,6 +61,7 @@ public class UserService {
         }
         if (cleanEmail != null && emailTaken(cleanEmail, null)) v.reject("email", "Another account already uses this email address.");
         v.check();
+        limits.check("users");
         // The UNIQUE constraint on users.email still protects against two simultaneous requests.
         db.update("INSERT INTO users(name,email,role,password_hash) VALUES (?,?,?,?)", cleanName, cleanEmail, role, passwords.encode(password));
     }

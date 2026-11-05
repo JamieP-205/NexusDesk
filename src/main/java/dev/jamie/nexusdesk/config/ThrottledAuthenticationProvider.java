@@ -17,6 +17,7 @@ final class ThrottledAuthenticationProvider implements AuthenticationProvider {
     private static final Logger LOG = LoggerFactory.getLogger(ThrottledAuthenticationProvider.class);
     private final AuthenticationProvider delegate;
     private final LoginThrottle throttle;
+    private final ThrottleKey key;
 
     /** Thrown instead of checking the password while an account or address is throttled. */
     static final class Throttled extends AuthenticationException {
@@ -25,14 +26,14 @@ final class ThrottledAuthenticationProvider implements AuthenticationProvider {
         long minutes() { return Math.max(1, (wait.toSeconds() + 59) / 60); }
     }
 
-    ThrottledAuthenticationProvider(AuthenticationProvider delegate, LoginThrottle throttle) {
-        this.delegate = delegate; this.throttle = throttle;
+    ThrottledAuthenticationProvider(AuthenticationProvider delegate, LoginThrottle throttle, ThrottleKey key) {
+        this.delegate = delegate; this.throttle = throttle; this.key = key;
     }
 
     @Override
     public Authentication authenticate(Authentication authentication) {
-        String address = authentication.getDetails() instanceof WebAuthenticationDetails details
-                ? details.getRemoteAddress() : "unknown";
+        String address = key.clientFor(authentication.getDetails() instanceof WebAuthenticationDetails details
+                ? details.getRemoteAddress() : "unknown");
         Duration[] wait = new Duration[1];
         var attempt = throttle.tryStart(authentication.getName(), address, wait);
         if (attempt == null) {

@@ -20,7 +20,10 @@ public class TicketService {
             SELECT t.*, u.name AS creator_name, a.name AS assignee_name FROM tickets t
             JOIN users u ON t.creator_id=u.id LEFT JOIN users a ON t.assignee_id=a.id
             """;
-    public TicketService(JdbcTemplate db, UserService users) { this.db = db; this.users = users; }
+    private final RecordLimits limits;
+    public TicketService(JdbcTemplate db, UserService users, org.springframework.beans.factory.ObjectProvider<RecordLimits> limits) {
+        this.db = db; this.users = users; this.limits = limits.getIfAvailable(() -> RecordLimits.NONE);
+    }
 
     public Ticket get(Account actor, long id) {
         var rows = db.query(SELECT + " WHERE t.id=?", MAPPER, id);
@@ -81,6 +84,7 @@ public class TicketService {
         v.choice("category", category, Rules.CATEGORIES, "category");
         v.choice("priority", priority, Rules.PRIORITIES, "priority");
         v.check();
+        limits.check("tickets");
         var key = new GeneratedKeyHolder();
         db.update(connection -> {
             PreparedStatement statement = connection.prepareStatement(
@@ -178,6 +182,7 @@ public class TicketService {
         var v = new Validation();
         String clean = v.text("body", body, "Comment", 3000);
         v.check();
+        limits.check("comments");
         db.update("INSERT INTO comments(ticket_id,author_id,body) VALUES (?,?,?)", id, actor.id(), clean);
         db.update("UPDATE tickets SET updated_at=CURRENT_TIMESTAMP,version=version+1 WHERE id=?", id);
         history(id, actor, "Added a comment");
