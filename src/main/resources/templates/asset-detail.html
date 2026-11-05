@@ -157,8 +157,8 @@
             <tbody>
               <tr th:each="a : ${assignments}">
                 <td th:text="${a.name}"></td>
-                <td th:text="${#temporals.format(a.assigned_at,'dd MMM yyyy, HH:mm')}"></td>
-                <td th:text="${a.returned_at == null ? 'Current assignment' : #temporals.format(a.returned_at,'dd MMM yyyy, HH:mm')}"></td>
+                <td th:text="${#temporals.format(a.assignedAt,'dd MMM yyyy, HH:mm')}"></td>
+                <td th:text="${a.returnedAt == null ? 'Current assignment' : #temporals.format(a.returnedAt,'dd MMM yyyy, HH:mm')}"></td>
               </tr>
             </tbody>
           </table>

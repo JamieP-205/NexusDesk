@@ -49,6 +49,23 @@ class DemoProfileTest {
         mvc.perform(get("/login")).andExpect(content().string(containsString("Demo accounts")));
     }
 
+    @Test void everyDemoPageRendersForEveryRole() throws Exception {
+        var routes = new java.util.ArrayList<String>(java.util.List.of("/", "/tickets", "/tickets?page=2", "/tickets/new",
+                "/assets", "/assets/new", "/users"));
+        db.queryForList("SELECT id FROM tickets", Long.class).forEach(id -> routes.add("/tickets/" + id));
+        db.queryForList("SELECT id FROM assets", Long.class).forEach(id -> routes.add("/assets/" + id));
+        db.queryForList("SELECT id FROM users", Long.class).forEach(id -> routes.add("/users/" + id));
+        for (String email : new String[]{"admin@example.test", "tech@example.test", "employee@example.test"}) {
+            var role = users.list().stream().filter(a -> a.email().equals(email)).findFirst().orElseThrow().role();
+            for (String route : routes) {
+                int status = mvc.perform(get(route).with(org.springframework.security.test.web.servlet.request
+                        .SecurityMockMvcRequestPostProcessors.user(email).roles(role))).andReturn().getResponse().getStatus();
+                // Every page either renders, redirects, or refuses access. A 500 would mean a broken template.
+                assertThat(status).as(email + " " + route).isIn(200, 302, 403, 404);
+            }
+        }
+    }
+
     @Test void normalStartupRefusesADemoDatabase() {
         var bootstrap = new Bootstrap(users, mode, new MockEnvironment().withProperty("NEXUSDESK_ADMIN_PASSWORD", "Another-password-1"));
         assertThatThrownBy(() -> bootstrap.run(null)).isInstanceOf(IllegalStateException.class).hasMessageContaining("demo profile");

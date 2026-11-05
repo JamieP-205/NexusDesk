@@ -250,6 +250,18 @@ class WebFlowTest {
                 .andExpect(content().string(containsString("Use a purchase date today or earlier.")))
                 .andExpect(content().string(containsString("value=\"Lenovo\"")));
     }
+    @Test void equipmentPageShowsCurrentAndPastOwners() throws Exception {
+        long asset = assets.create(admin, "Laptop", "Dell", "X", "WF-3", LocalDate.now());
+        assets.assign(admin, asset, alex.id());
+        assets.returnAsset(admin, asset);
+        assets.assign(admin, asset, sam.id());
+        mvc.perform(get("/assets/" + asset).with(as(admin))).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Alex Murphy")))
+                .andExpect(content().string(containsString("Current assignment")));
+        mvc.perform(get("/assets/" + asset).with(as(tech))).andExpect(status().isOk());
+        mvc.perform(get("/assets/" + asset).with(as(sam))).andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Assignment history"))));
+    }
     @Test void assigningWithoutChoosingAPersonExplainsWhy() throws Exception {
         long asset = assets.create(admin, "Laptop", "Dell", "X", "WF-2", LocalDate.now());
         mvc.perform(post("/assets/" + asset + "/assign").with(as(admin)).with(csrf()).param("owner", ""))

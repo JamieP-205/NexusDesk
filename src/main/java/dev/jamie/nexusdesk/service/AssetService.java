@@ -92,13 +92,13 @@ public class AssetService {
         db.update("UPDATE asset_assignments SET returned_at=CURRENT_TIMESTAMP WHERE asset_id=? AND returned_at IS NULL", id);
         db.update("UPDATE assets SET status='Available',version=version+1 WHERE id=?", id);
     }
-    public List<java.util.Map<String, Object>> history(Account actor, long id) {
+    public List<Assignment> history(Account actor, long id) {
         Rules.staff(actor);
         get(actor, id);
-        return db.queryForList("""
+        return db.query("""
                 SELECT u.name, aa.assigned_at, aa.returned_at FROM asset_assignments aa
                 JOIN users u ON aa.user_id=u.id WHERE aa.asset_id=? ORDER BY aa.id DESC
-                """, id);
+                """, new DataClassRowMapper<>(Assignment.class), id);
     }
     private void lock(long id) { db.queryForList("SELECT id FROM assets WHERE id=? FOR UPDATE", id); }
 

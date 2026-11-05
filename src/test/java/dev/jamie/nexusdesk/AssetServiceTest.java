@@ -88,7 +88,7 @@ class AssetServiceTest {
         assets.assign(admin, id, admin.id());
         assets.returnAsset(admin, id);
         var history = assets.history(admin, id);
-        assertThat(history).hasSize(2).allSatisfy(row -> assertThat(row.get("RETURNED_AT")).isNotNull());
+        assertThat(history).hasSize(2).allSatisfy(row -> assertThat(row.returnedAt()).isNotNull());
         assertThat(db.queryForObject("SELECT COUNT(*) FROM asset_assignments WHERE asset_id=? AND returned_at IS NULL", Integer.class, id)).isZero();
         assertThat(assets.get(admin, id).status()).isEqualTo("Available");
     }

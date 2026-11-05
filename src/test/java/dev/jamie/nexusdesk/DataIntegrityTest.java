@@ -80,10 +80,10 @@ class DataIntegrityTest {
         assets.assign(admin, asset, sam.id());
         var history = assets.history(admin, asset);
         assertThat(history).hasSize(2);
-        assertThat(history.get(0).get("NAME")).isEqualTo("Sam");
-        assertThat(history.get(0).get("RETURNED_AT")).isNull();
-        assertThat(history.get(1).get("NAME")).isEqualTo("Alex");
-        assertThat(history.get(1).get("RETURNED_AT")).isNotNull();
+        assertThat(history.get(0).name()).isEqualTo("Sam");
+        assertThat(history.get(0).returnedAt()).isNull();
+        assertThat(history.get(1).name()).isEqualTo("Alex");
+        assertThat(history.get(1).returnedAt()).isNotNull();
     }
 
     interface Action { void run(int n) throws Exception; }
