@@ -37,3 +37,7 @@ java -jar target\nexusdesk-0.2.2.jar --spring.profiles.active=hosted --server.se
 ```
 
 Then open http://localhost:7860. (The cookie override is only for plain-HTTP testing on your own machine.) `HostedDemoTest` covers isolation, role switching, reset, expiry, limits, throttling and capacity.
+
+## Checking a deployed demo
+
+Run `python scripts/hosted_smoke_test.py https://your-demo.example` against a hosted demo you control. This standard-library HTTP check creates two disposable visitor sandboxes, exercises all three roles and checks isolation and reset. It signs out both visitors afterwards. It does not require an account or API key.
