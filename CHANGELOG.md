@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.1 — 5 November 2026
+
+Made by Claude (Anthropic's AI assistant) in Claude Code at Jamie's request.
+
+**Fixed**
+- The 0.2.0 Windows launcher failed unless run as administrator. The cause was Smart App Control blocking `.cmd` files downloaded from the internet, not antivirus (see [Windows download](docs/windows-download.md)). The demo now starts with `java -jar nexusdesk-0.2.1.jar --demo`, with no script needed; the `.cmd` remains for PCs without Smart App Control.
+- Demo data moved from the download folder to `%LOCALAPPDATA%\NexusDesk\demo`, so the download can live anywhere.
+- H2 no longer writes a trace file that grew by megabytes a minute.
+- The release ZIP uses forward-slash paths and CRLF line endings, and is built the same way every time (`scripts/package_release.py`).
+
+**Added**
+- A `hosted` profile for a public browser demo: a private in-memory sandbox per visitor, one-click role buttons, role switching, reset, expiry, and limits on sandboxes, rows and sign-up rate (see [Browser demo](docs/hosted-demo.md)).
+- `--demo` picks the next free port if 8080 is busy and opens the browser.
+- 11 more tests (83 in total).
+
 ## 0.2.0 — 5 November 2026
 
 Made by Claude (Anthropic's AI assistant) in Claude Code at Jamie's request. Commits carry a `Co-Authored-By: Claude` trailer.

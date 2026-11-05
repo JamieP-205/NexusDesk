@@ -71,6 +71,38 @@ public class HostedConfig {
         };
     }
 
+    /**
+     * Before any change, checks the sandbox's total size across every table that grows, including
+     * history and equipment assignments (which grow with ordinary status changes and returns). Rows are
+     * bounded in length, so a row cap bounds memory. Simultaneous requests can overshoot by a few rows.
+     */
+    @Bean
+    org.springframework.web.servlet.config.annotation.WebMvcConfigurer sandboxSizeCheck(
+            JdbcTemplate db, @Value("${nexusdesk.hosted.max-rows:2500}") int maxRows) {
+        return new org.springframework.web.servlet.config.annotation.WebMvcConfigurer() {
+            @Override
+            public void addInterceptors(org.springframework.web.servlet.config.annotation.InterceptorRegistry registry) {
+                registry.addInterceptor(new org.springframework.web.servlet.HandlerInterceptor() {
+                    @Override
+                    public boolean preHandle(jakarta.servlet.http.HttpServletRequest request,
+                                             jakarta.servlet.http.HttpServletResponse response, Object handler) {
+                        if (!"POST".equals(request.getMethod()) || SandboxContext.current() == null) return true;
+                        Integer rows = db.queryForObject("""
+                                SELECT (SELECT COUNT(*) FROM tickets) + (SELECT COUNT(*) FROM comments)
+                                     + (SELECT COUNT(*) FROM ticket_history) + (SELECT COUNT(*) FROM users)
+                                     + (SELECT COUNT(*) FROM assets) + (SELECT COUNT(*) FROM asset_assignments)
+                                """, Integer.class);
+                        if (rows != null && rows >= maxRows) {
+                            throw ValidationProblem.of("limit", "This demo has reached its size limit. "
+                                    + "Use Reset demo in the sidebar to start again with fresh data.");
+                        }
+                        return true;
+                    }
+                }).excludePathPatterns("/demo/**", "/logout", "/login");
+            }
+        };
+    }
+
     @Bean
     RecordLimits sandboxLimits(JdbcTemplate db,
                                @Value("${nexusdesk.hosted.max-tickets:150}") int tickets,

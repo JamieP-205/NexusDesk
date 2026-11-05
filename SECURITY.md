@@ -39,6 +39,10 @@ Rules are enforced on the server, not just by hiding buttons: `/users/**` needs 
 
 The demo profile uses a public password (`Demo-password-123`) shown on its sign-in page. It only runs against its own file (`data/nexusdesk-demo.mv.db`), and it refuses to add demo accounts to a database that already has real ones. The normal profile refuses to start on a demo database and rejects the demo password as its first administrator password, so the public credentials can't become a fallback.
 
+## Public browser demo
+
+The `hosted` profile (see [docs/hosted-demo.md](docs/hosted-demo.md)) gives each visitor a private in-memory copy of the fictional data, so no visitor can see, change or lock anything belonging to another. Demo access uses one-click role buttons rather than a shared password. Password sign-in attempts are throttled per visitor sandbox, because every visitor reaches the app through the same hosting proxy. Sandboxes are capped in number, size and creation rate, and expire after an hour idle. The app has no email or other outside service, so demo actions can't send messages.
+
 ## Known gaps
 
 No password reset, no multi-factor sign-in, no account lockout notifications, no audit log export, and no automated dependency scanning. HTTPS depends on a reverse proxy (see [deployment](docs/deployment.md)).

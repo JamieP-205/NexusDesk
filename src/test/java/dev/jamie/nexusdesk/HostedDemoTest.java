@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** The public browser demo: one private sandbox per visitor, with limits. */
 @SpringBootTest(properties = {"nexusdesk.hosted.max-sandboxes=6", "nexusdesk.hosted.creations-per-minute=100",
-        "nexusdesk.hosted.max-tickets=27", "server.servlet.session.cookie.secure=false"})
+        "nexusdesk.hosted.max-tickets=27", "nexusdesk.hosted.max-rows=400", "server.servlet.session.cookie.secure=false"})
 @ActiveProfiles("hosted")
 @AutoConfigureMockMvc
 class HostedDemoTest {
@@ -108,6 +108,34 @@ class HostedDemoTest {
                         .param("description", "Details").param("category", "Other").param("priority", "Low"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("reached its limit of 27 tickets")));
+    }
+
+    @Test void historyGrowthIsCappedToo() throws Exception {
+        var visitor = start("technician");
+        // Flip one ticket between In Progress and Waiting until the sandbox's total size limit is hit.
+        String html = search(visitor, "Wi-Fi drops");
+        var m = Pattern.compile("href=\"/tickets/(\\d+)\"").matcher(html);
+        assertThat(m.find()).isTrue();
+        String id = m.group(1);
+        int status = 0;
+        String body = "";
+        for (int i = 0; i < 400 && status != 400; i++) {
+            String page = page(visitor, "/tickets/" + id);
+            var v = Pattern.compile("name=\"version\"\\s*value=\"(\\d+)\"").matcher(page);
+            assertThat(v.find()).isTrue();
+            var a = Pattern.compile("value=\"(\\d+)\"\\s*selected=\"selected\"").matcher(page.substring(page.indexOf("id=\"assignee\"")));
+            assertThat(a.find()).isTrue();
+            var response = mvc.perform(post("/tickets/" + id).session(visitor).with(csrf()).param("version", v.group(1))
+                    .param("status", i % 2 == 0 ? "Waiting" : "In Progress").param("priority", "High").param("assignee", a.group(1)))
+                    .andReturn().getResponse();
+            status = response.getStatus();
+            body = response.getContentAsString();
+        }
+        assertThat(status).isEqualTo(400);
+        assertThat(body).contains("size limit");
+        assertThat(page(visitor, "/tickets/" + id)).doesNotContain("size limit");
+        mvc.perform(post("/tickets/" + id + "/comments").session(visitor).with(csrf()).param("body", "More"))
+                .andExpect(status().isBadRequest()).andExpect(content().string(containsString("size limit")));
     }
 
     @Test void disablingADemoAccountOnlyAffectsThatVisitor() throws Exception {
