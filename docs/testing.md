@@ -4,6 +4,12 @@ The checks below were run by the AI tools that built each version, not by me. I'
 
 ## Version 0.2.2 (Claude, 5 November 2026)
 
+### Deployment verification (5 November 2026)
+
+The Render service initially returned the older role descriptions despite reporting a successful v0.2.2 deployment. A clear-build-cache deployment of main commit `c0a9f87` completed successfully; the public demo then returned the new interface.
+
+`python scripts/hosted_smoke_test.py https://nexusdesk-demo-1tl6.onrender.com` passed against the live service and the packaged v0.2.2 hosted profile locally. It checks the employee/technician ticket journey (including reopening and confirming), permissions, all three role checklists, administrator account and equipment operations, visitor isolation and reset. Its two fictional visitor sandboxes are removed on sign-out. Release ZIP and JAR checksums also matched the published SHA256SUMS.txt.
+
 | Check | Result |
 | --- | --- |
 | `.\mvnw.cmd verify` | 96 tests, 0 failures (new: quick actions and their permissions, requester confirm/reopen, conflict check, checklist in both demo profiles, error pages in the browser demo) |
