@@ -105,7 +105,7 @@
           <h2>Current assignment</h2>
           <p
             class="owner-name"
-            th:text="${asset.ownerName ?: 'No one yet'}"
+            th:text="${asset.ownerName ?: 'Not assigned'}"
           ></p>
           <form
             th:if="${me.isAdmin() and asset.ownerId != null}"

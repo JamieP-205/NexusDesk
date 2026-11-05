@@ -6,6 +6,8 @@ Codex split each session's work into commits at the end of that session, so they
 
 The "Fix generated ticket IDs" commit is a real fix. Running the later ticket tests against the commit before it (`18827c2`) reproduces the H2 failure.
 
+The 0.2.0 commits on `claude/finish-nexusdesk` were made by Claude (Anthropic's AI assistant) in Claude Code on 4–5 November 2026 and carry a `Co-Authored-By: Claude` trailer. They were committed as the work progressed.
+
 Nothing has been backdated or rewritten. The merge into `main` keeps the individual commits rather than squashing them. From here, commits I make myself won't carry the Codex trailer, and pull requests will say how much of a change is mine.
 
 [Live GitHub history](https://github.com/JamieP-205/NexusDesk/commits/main/)

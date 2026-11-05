@@ -79,7 +79,7 @@
             <h2>Ticket history</h2>
             <ol class="timeline">
               <li th:each="h : ${history}">
-                <strong th:text="${h.body}"></strong
+                <strong class="preserve" th:text="${h.body}"></strong
                 ><small
                   ><span th:text="${h.name}"></span> ·
                   <span

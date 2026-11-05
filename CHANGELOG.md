@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.0 — 5 November 2026
+
+Made by Claude (Anthropic's AI assistant) in Claude Code at Jamie's request. Commits carry a `Co-Authored-By: Claude` trailer.
+
+**Fixed**
+- Choosing a technician while leaving a ticket Open silently dropped the technician and still said "Ticket updated". The rule is now explicit (Open has no technician; every other status has one), the server explains a mismatch beside the field and keeps the selection, and the form keeps the two in step.
+- Passwords were hashed with PBKDF2-HMAC-SHA1 through a deprecated constructor. New hashes use PBKDF2-HMAC-SHA256; migration V3 tags old hashes, which still work and are upgraded at the next sign-in.
+- Resolution notes typed on an unfinished ticket were silently discarded; they're now refused with an explanation.
+- "Ticket updated" / "Asset updated" appeared even when nothing changed. Saves now say what changed, or that nothing did.
+- After an edit conflict, re-saving could undo the other person's change. Only the fields you changed are carried over.
+- On Windows, a forced stop could lose the last half-second of saved work (H2 write delay). Commits now reach disk immediately.
+- `spring-boot:run` limited the JIT compiler, making each sign-in take about two seconds.
+
+**Added**
+- Sign-in throttling per email+address and per address.
+- Ticket list pagination (20 per page) that keeps search and filters.
+- Field-level validation messages, an error summary, and kept input on every form (never the password).
+- Clear empty states, a skip link, and better labels for roles and statuses.
+- A separated demo profile with 26 fictional tickets, `demo.cmd` for Windows, and guards so demo and real databases can't be mixed.
+- A `prod` profile for running behind an HTTPS proxy, `scripts/db_backup.py`, and [deployment notes](docs/deployment.md).
+- 49 more tests (72 in total), a smoke test covering throttling, paging, restart and backup/restore, and a [walkthrough](docs/walkthrough.md).
+
 ## 0.1.0 — 2 October 2026
 
 First working version, built from my brief with substantial help from Codex:

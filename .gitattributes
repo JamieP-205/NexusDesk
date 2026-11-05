@@ -3,3 +3,4 @@
 mvnw text eol=lf
 *.cmd text eol=crlf
 *.png binary
+*.mp4 binary

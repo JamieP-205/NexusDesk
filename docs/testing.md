@@ -1,46 +1,71 @@
 # How this build was checked
 
-Everything in the first two sections was run by Codex during the build sessions, not by me. I'll add my own results below them as I go.
+The checks below were run by the AI tools that built each version, not by me. I'll add my own results at the end as I go.
 
-Codex ran `mvn verify` with Maven 3.9.11 and JDK 21, compiling for Java 17. The suite passed 23 tests: 8 ticket, 5 asset, 4 account and 6 web/security tests. GitHub Actions also passed verification on Java 17 and 21 on 2 October 2026. The packaged-app smoke check runs after that suite in CI.
+## Version 0.2.0 (Claude, 4–5 November 2026)
 
-| Area | What the tests check |
+Run on Windows 11 with OpenJDK 27, Maven 3.9.11 (wrapper) and Python 3.14. The CI workflow runs the same checks on Java 17, 21 and 25.
+
+| Check | Result |
 | --- | --- |
-| Tickets | Valid create, blank and boundary-length titles, ownership, employee write restrictions, invalid assignees/states, resolution/close/reopen, history retention, stale updates and search input |
-| Equipment | Assignment/return history, service and database duplicate-owner checks, employee access, repair/retired restrictions, duplicate serials, future dates and stale edits |
-| Accounts | Different salted hashes for the same password, duplicate case-insensitive email, invalid email/password, current-admin protection and active-work reassignment |
-| Web | Valid/invalid login, required login, CSRF rejection, an employee blocked from the admin pages, another employee's direct ticket URL, disabled sessions, rendered pages, escaped HTML and invalid IDs. There are no tests yet for a technician trying admin actions, or for a role change ending a session. |
+| `.\mvnw.cmd verify` | 72 tests, 0 failures |
+| `python scripts\smoke_test.py` | PASS: accounts, sign-in, privacy, assignment rule, resolving and closing, throttling, pagination, persistence across a restart, backup and restore |
+| Upgrade of a copy of a real 0.1.0 demo database | Migrations V3–V4 applied; an old SHA-1 password signed in and was re-hashed as SHA-256; all 10 tickets kept; the normal profile refused to open it; the original file was unchanged (checksum compared) |
+| `scripts\db_backup.py` against a running app | Refused to copy the locked file |
+| H2 SQL export/import through the app jar | Imported copy had all tickets |
+| A clean clone of the pushed branch | `.\mvnw.cmd verify` and the smoke test passed; `.\demo.cmd` started and signed in |
 
-The tests use actual Spring services, Spring Security and H2. They don't mock the database or assert only that a method was called. Each class uses its own in-memory database and rolls back test changes.
+| Test class | Tests | What it covers |
+| --- | --- | --- |
+| `TicketServiceTest` | 17 | Assignment rule (Open + technician refused, forward states need one, reopening), invalid/disabled assignees, transitions, resolution notes, no-op saves, stale saves, comments making a form stale, search escaping, pagination and filter errors |
+| `AssetServiceTest` | 8 | Assign/return history, duplicate owners (service and database), employee access, repair/retired, duplicate serials, dates, no-op edits |
+| `UserServiceTest` | 6 | SHA-256 hashes, duplicate emails, field errors, current-admin protection, admin-only actions, reassigning active work |
+| `DataIntegrityTest` | 4 | Real commits: a failed history write rolls back the ticket change; two technicians saving the same version (one wins, one history set); two admins assigning one laptop (one owner); history kept after return |
+| `WebFlowTest` | 22 | Over HTTP: employee/technician permission matrix, privacy filters, disabled and demoted sessions, CSRF, session ID change at sign-in, safe error pages, throttling, SHA-1 hash upgrade, untagged hashes failing closed, forms keeping input, conflict merging, pagination links, empty states |
+| `WebSecurityTest` | 6 | The original sign-in, CSRF, privacy, disabled-session, escaping and invalid-ID checks |
+| `MigrationAndModeTest` | 5 | Migrating a 0.1.0-style database, SHA-256 vs the old configuration, demo detection, the throttle's sliding window and in-flight counting |
+| `DemoProfileTest` | 4 | Demo seed data, every seeded page rendering for each role, normal startup refusing a demo database, the demo seeder refusing a real one |
 
-## Packaged app and browser checks
+### In the browser
 
-Codex ran `python scripts/smoke_test.py` against the packaged JAR. It creates an isolated temporary file database, creates accounts, checks login and ticket privacy, submits a ticket and comment, assigns/resolves/closes the ticket, restarts the server and checks that the ticket, comment and resolution survived. It passed on 2 October 2026 using Java 17. The script uses Python’s standard library and removes its temporary database afterwards.
+The demo was driven in Chromium with Playwright as all three roles: raising a ticket with a validation error, the assignment rule (with and without the form script), a two-tab edit conflict, reopening a closed ticket, disabling a signed-in employee, equipment assign/return, duplicate-email and self-disable errors, and pagination. Every page for every role was checked at 1366, 768 and 375 pixels wide: no horizontal page scroll and no clipped text. The first Tab key press reaches a "Skip to content" link, and the tab order runs through filters, results and page links. After a failed submission, focus moves to the error summary.
 
-Codex also captured the five screenshots from the running demo in Chromium. The browser reported no page JavaScript errors and no page-level horizontal overflow at a 390-pixel viewport. Wide tables scroll inside their own container. This does not replace an accessibility audit.
-
-## Bugs found during this session
+### Bugs found while checking 0.2.0
 
 | Problem | Fix | Evidence |
 | --- | --- | --- |
-| The test framework could not attach its inline agent in Codex's environment. | Switched Mockito to its subclass mock maker, since these tests don't need inline mocks. | Tests could then run against H2. |
-| Ticket insert returned ID and generated timestamps; `getKey()` rejected multiple values. | Requested only the generated `id` column. | The previously failing create/lifecycle tests passed. |
-| Reopening would clear the current resolution without retaining its text. | Added history details through migration V2. | The lifecycle test checks that the old fix remains in history. |
+| Smoke test failed on Windows after restarting: the last saves were missing. | `WRITE_DELAY=0` in the database URLs. | Smoke test passes, including a hard stop on Windows. |
+| Spring's non-deprecated PBKDF2 constructor couldn't verify 0.1.0 hashes. | `LegacySha1PasswordVerifier`. | Migration test and a real 0.1.0 database copy. |
+| The first throttle could be bypassed by URL shape or simultaneous guesses (automated security review). | Throttle inside the authentication provider, counting in-flight attempts. | `guessesInFlightCountTowardsTheLimit`. |
+| Inline field messages never appeared. | `errors.get(name)` instead of `errors[name]`. | `WebFlowTest` checks the inline element. |
+| Equipment with history showed an error page. | Typed `Assignment` record. | `equipmentPageShowsCurrentAndPastOwners`, `everyDemoPageRendersForEveryRole`. |
+| Re-saving after a conflict undid the other person's change. | Carry over only fields the user changed. | `aConflictKeepsOnlyMyChangesNotTheStaleValues`. |
+| Sign-in took ~2 s under `spring-boot:run`. | `optimizedLaunch=false`. | Sign-in measured at ~0.4 s afterwards. |
 
-## Limits of this evidence
+### Limits of this evidence
 
-Nobody has load-tested the app, run a formal accessibility audit or tested PostgreSQL. Automated database tests use H2 in memory; the separate restart check covers the demo file database. The optimistic-save tests check stale versions, but they aren't a complete multi-user stress test. The concurrency review added row locks; broader concurrency testing is still worthwhile before real use.
+No load test, formal accessibility audit (screen reader, contrast tooling) or external security review. Database tests use H2; nothing has run on PostgreSQL. The concurrency tests cover two simultaneous requests, not sustained load.
+
+## Version 0.1.0 (Codex, 1–2 October 2026)
+
+Codex ran `mvn verify` with Maven 3.9.11 and JDK 21, compiling for Java 17: 23 tests passed. GitHub Actions passed on Java 17 and 21. Codex ran the original smoke test against the packaged JAR (accounts, ticket privacy, assign/resolve/close, restart) on Java 17, and captured screenshots in Chromium with no page-level horizontal overflow at 390 pixels.
+
+| Problem found then | Fix |
+| --- | --- |
+| Mockito couldn't attach its inline agent in Codex's environment. | Subclass mock maker. |
+| Ticket insert returned ID and timestamps; `getKey()` rejected multiple values. | Request only the `id` column. |
+| Reopening cleared the resolution without keeping its text. | History details (migration V2). |
 
 ## Manual checks I'm working through
 
-I haven't done these myself yet. When I have, I'll note the date and anything that didn't behave as expected.
+I haven't done these myself yet. When I have, I'll note the date and anything unexpected.
 
 1. Start the demo, sign in as `employee@example.test`, create a ticket and add a comment.
 2. Try opening another employee's ticket directly. Expect a safe not-found page.
-3. Sign in as IT, assign the new ticket, resolve it with notes, close it and reopen it.
+3. Sign in as IT, choose a technician on an Open ticket and watch the status change; then resolve, close and reopen it.
 4. Check the earlier notes are still in history.
-5. Open one ticket in two tabs and confirm the second stale save is rejected.
-6. Assign equipment, try assigning it again, return it and inspect the earlier assignment.
+5. Open one ticket in two tabs, save one, then save the other and read the conflict message.
+6. Assign equipment, return it and inspect the earlier assignment.
 7. Disable an employee while their session is open, then refresh that session.
-8. Stop and restart the application and check the records still exist.
-9. Check the login, queue, detail, equipment and account pages with the keyboard and a narrow viewport.
+8. Get five passwords wrong in a row, then try the right one.
+9. Stop and restart the application and check the records still exist; then try a backup and restore on the demo database.
