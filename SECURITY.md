@@ -32,7 +32,7 @@ Rules are enforced on the server, not just by hiding buttons: `/users/**` needs 
 
 - All SQL uses bound parameters. The only SQL built from strings uses fixed column and table names.
 - Templates escape user content (`th:text`); tests check that a `<script>` title is shown as text.
-- Error pages never include stack traces, exception names or SQL. Database failures are logged on the server with their cause.
+- Error pages never include stack traces, exception names or SQL. Database failures are logged on the server by type and SQL state; the full detail is logged only at debug level.
 - Form errors never send a submitted password back to the browser.
 
 ## Demo profile

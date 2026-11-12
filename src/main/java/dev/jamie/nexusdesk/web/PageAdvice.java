@@ -60,7 +60,11 @@ public class PageAdvice {
     }
     @ExceptionHandler(DataAccessException.class)
     String database(DataAccessException error, HttpServletResponse response, Model model) {
-        LOG.error("Database request failed", error);
+        // The message can quote the values involved, so only the type and SQL state go in the normal log.
+        Throwable cause = error.getMostSpecificCause();
+        LOG.error("Database request failed: {} (cause {}, SQL state {})", error.getClass().getSimpleName(),
+                cause.getClass().getSimpleName(), cause instanceof java.sql.SQLException sql ? sql.getSQLState() : "none");
+        LOG.debug("Database failure detail", error);
         response.setStatus(503); model.addAttribute("message", "The database couldn't complete that request. Please try again shortly."); return "error";
     }
 }
