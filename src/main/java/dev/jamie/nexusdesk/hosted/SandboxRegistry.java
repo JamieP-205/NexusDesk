@@ -63,7 +63,6 @@ public class SandboxRegistry {
         Busy(String message) { super(message); }
     }
 
-    public Duration idleTimeout() { return idle; }
     public int size() { return sandboxes.size(); }
 
     /** The seeded account for "employee", "technician" or "admin". */
@@ -104,8 +103,6 @@ public class SandboxRegistry {
             shutdown(db);
         }
     }
-
-    public Sandbox create() { return create(null); }
 
     /**
      * Creates a sandbox. Checks and creation happen under one lock, so simultaneous starts can't exceed
