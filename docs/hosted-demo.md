@@ -13,7 +13,7 @@ The `hosted` profile runs NexusDesk for anyone with a browser, using fictional d
 
 | Limit | Default (`application-hosted.properties`) |
 | --- | --- |
-| Sandboxes at once | 100. When full, one unused for over 5 minutes makes way; otherwise newcomers are asked to try again shortly, so nobody active is pushed out. |
+| Sandboxes at once | 100 (the live service sets 80 in `render.yaml`). When full, one unused for over 5 minutes makes way; otherwise newcomers are asked to try again shortly, so nobody active is pushed out. |
 | New sandboxes | 60 a minute overall. Per visitor address, 6 a minute and 10 at once, but only when `nexusdesk.hosted.trusted-proxy-hops` says which `X-Forwarded-For` entry the host's proxy adds; it's off by default, because an address a visitor writes themselves could be used to claim someone else's quota |
 | Rows per sandbox | 150 tickets, 400 comments, 40 accounts, 60 pieces of equipment, and 2,500 rows in total including history and assignments |
 | Form size | 64 KB; every text field already has a maximum length |

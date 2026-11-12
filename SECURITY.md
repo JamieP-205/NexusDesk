@@ -1,6 +1,6 @@
 # Security notes
 
-NexusDesk is a practice project, not a production helpdesk. Don't put real staff data in it. These notes describe what version 0.2.0 does and what it doesn't.
+NexusDesk is a practice project, not a production helpdesk. Don't put real staff data in it. These notes describe what version 0.2.2 does and what it doesn't.
 
 ## Sign-in and passwords
 
@@ -12,7 +12,7 @@ NexusDesk is a practice project, not a production helpdesk. Don't put real staff
 
 ## Sessions and requests
 
-- Session cookies are `HttpOnly`, `SameSite=Lax`, sent only as cookies (never in URLs), and `Secure` under the `prod` profile. Sessions time out after 30 minutes.
+- Session cookies are `HttpOnly`, `SameSite=Lax`, sent only as cookies (never in URLs), and `Secure` under the `prod` and `hosted` profiles. Sessions time out after 30 minutes (60 minutes in the hosted demo).
 - Spring Security issues a new session ID at sign-in, so a planted session ID is useless.
 - Every POST form carries a CSRF token, including sign-in and sign-out.
 - On every authenticated request `AccountStatusFilter` re-reads the account. A disabled account, or one whose role changed, is signed out on its next request.
@@ -26,13 +26,13 @@ NexusDesk is a practice project, not a production helpdesk. Don't put real staff
 | Technician | Work on every ticket, see everyone's tickets and equipment, use the dashboard |
 | Administrator | Technician access plus accounts and equipment management |
 
-Rules are enforced on the server, not just by hiding buttons: `/users/**` needs the administrator role in `SecurityConfig`, and every service method checks the role again (`Rules.staff`, `Rules.admin`). Employee queries are always limited to their own records, whatever filters are sent; another person's ticket or asset returns the same "not found" page as one that doesn't exist. `WebFlowTest` and `DemoProfileTest` check these rules over HTTP.
+Rules are enforced on the server, not just by hiding buttons: `/users/**` needs the administrator role in `SecurityConfig`, and every service method that makes a staff or administrator change checks the role again (`Rules.staff`, `Rules.admin`). Employee queries are always limited to their own records, whatever filters are sent; another person's ticket or asset returns the same "not found" page as one that doesn't exist. `WebFlowTest` and `DemoProfileTest` check these rules over HTTP.
 
 ## Data handling
 
-- All SQL uses bound parameters. The only SQL built from strings is a fixed list of column names.
+- All SQL uses bound parameters. The only SQL built from strings uses fixed column and table names.
 - Templates escape user content (`th:text`); tests check that a `<script>` title is shown as text.
-- Error pages never include stack traces, exception names or SQL. Database failures are logged by type only.
+- Error pages never include stack traces, exception names or SQL. Database failures are logged on the server with their cause.
 - Form errors never send a submitted password back to the browser.
 
 ## Demo profile
