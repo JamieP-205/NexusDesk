@@ -40,18 +40,20 @@
           th:if="${me.isStaff()}"
           href="/"
           th:classappend="${active == 'dashboard'} ? 'selected'"
+          th:aria-current="${active == 'dashboard'} ? 'page'"
           >Overview <span>↗</span></a
         >
-        <a href="/tickets" th:classappend="${active == 'tickets'} ? 'selected'"
+        <a href="/tickets" th:classappend="${active == 'tickets'} ? 'selected'" th:aria-current="${active == 'tickets'} ? 'page'"
           >Support tickets <span>≡</span></a
         >
-        <a href="/assets" th:classappend="${active == 'assets'} ? 'selected'"
+        <a href="/assets" th:classappend="${active == 'assets'} ? 'selected'" th:aria-current="${active == 'assets'} ? 'page'"
           >Equipment <span>▤</span></a
         >
         <a
           th:if="${me.isAdmin()}"
           href="/users"
           th:classappend="${active == 'users'} ? 'selected'"
+          th:aria-current="${active == 'users'} ? 'page'"
           >People <span>○</span></a
         >
       </nav>
@@ -105,7 +107,8 @@
         ></strong>
         <ul>
           <li th:each="e : ${errors}">
-            <a th:href="${'#' + e.key}" th:text="${e.value}"></a>
+            <a th:if="${e.key != 'limit'}" th:href="${'#' + e.key}" th:text="${e.value}"></a>
+            <span th:unless="${e.key != 'limit'}" th:text="${e.value}"></span>
           </li>
         </ul>
       </div>
