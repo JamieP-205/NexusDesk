@@ -82,7 +82,7 @@ The first start creates that administrator if the database has no accounts. Sett
 ## Build and test
 
 ```powershell
-.\mvnw.cmd verify             # 96 tests: services, HTTP and security, concurrency, migrations, demo and hosted profiles
+.\mvnw.cmd verify             # 98 tests: services, HTTP and security, concurrency, migrations, demo and hosted profiles
 python scripts\smoke_test.py  # packaged app over HTTP: sign-in, rules, throttling, paging, restart, backup/restore
 ```
 
