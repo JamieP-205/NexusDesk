@@ -60,7 +60,7 @@ public class PageAdvice {
     }
     @ExceptionHandler(DataAccessException.class)
     String database(DataAccessException error, HttpServletResponse response, Model model) {
-        LOG.error("Database request failed ({})", error.getClass().getSimpleName());
+        LOG.error("Database request failed", error);
         response.setStatus(503); model.addAttribute("message", "The database couldn't complete that request. Please try again shortly."); return "error";
     }
 }
