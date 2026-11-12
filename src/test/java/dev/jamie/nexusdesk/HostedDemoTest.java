@@ -187,6 +187,28 @@ class HostedDemoTest {
                 .andExpect(flash().attribute("demoError", containsString("full")));
     }
 
+    @Test void resetStillWorksWhenTheDemoIsFull() throws Exception {
+        MockHttpSession visitor = null;
+        for (int i = 0; i < 6; i++) visitor = startFrom("10.7.0." + i);
+        assertThat(registry.size()).isEqualTo(6);
+        var after = (MockHttpSession) mvc.perform(post("/demo/reset").param("role", "employee").session(visitor).with(csrf())
+                        .header("X-Forwarded-For", "10.7.0.5"))
+                .andExpect(redirectedUrl("/tickets")).andExpect(flash().attribute("info", containsString("reset")))
+                .andReturn().getRequest().getSession(false);
+        assertThat(registry.size()).isEqualTo(6);
+        mvc.perform(get("/tickets").session(after)).andExpect(status().isOk());
+    }
+
+    @Test void aRefusedResetEndsTheSessionInsteadOfLeavingItBroken() throws Exception {
+        MockHttpSession visitor = null;
+        for (int i = 0; i < 6; i++) visitor = startFrom("10.7.1.1");
+        // A seventh start from this address in a minute is refused, so the old sandbox can't be replaced.
+        mvc.perform(post("/demo/reset").param("role", "employee").session(visitor).with(csrf()).header("X-Forwarded-For", "10.7.1.1"))
+                .andExpect(redirectedUrl("/login")).andExpect(flash().attribute("demoError", containsString("several demos")));
+        assertThat(registry.size()).isEqualTo(5);
+        assertThat(visitor.isInvalid()).isTrue();
+    }
+
     @Test void oneAddressCantTakeEverySandbox() throws Exception {
         for (int i = 0; i < 6; i++) startFrom("10.8.0.1");
         mvc.perform(post("/demo/start").param("role", "employee").session(new MockHttpSession()).with(csrf())

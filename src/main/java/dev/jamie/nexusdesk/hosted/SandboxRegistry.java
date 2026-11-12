@@ -137,6 +137,15 @@ public class SandboxRegistry {
         return sandbox;
     }
 
+    /**
+     * Swaps a visitor's sandbox for a fresh one. The old one is removed first, under the same lock, so a
+     * reset doesn't need a spare slot when the demo is full. The other limits still apply.
+     */
+    public synchronized Sandbox replace(String oldId, String client) {
+        remove(oldId);
+        return create(client);
+    }
+
     /** Returns the live sandbox and records the visit, or null if it has expired or been removed. */
     public Sandbox find(String id) {
         if (id == null) return null;

@@ -70,13 +70,15 @@ public class DemoController {
         if (old == null) return "redirect:/login";
         Sandbox fresh;
         try {
-            fresh = registry.create(client(request));
+            fresh = registry.replace(old.id(), client(request));
         } catch (SandboxRegistry.Busy busy) {
-            flash.addFlashAttribute("error", busy.getMessage());
-            return "redirect:/";
+            // The old sandbox is already gone, so end the session and let the visitor start again.
+            SandboxContext.clear();
+            request.getSession().invalidate();
+            flash.addFlashAttribute("demoError", busy.getMessage());
+            return "redirect:/login";
         }
         request.getSession().setAttribute(SandboxFilter.SESSION_KEY, fresh.id());
-        registry.remove(old.id());
         SandboxContext.bind(fresh);
         guide.clear(request);
         flash.addFlashAttribute("info", "Your demo has been reset to the original fictional data.");
