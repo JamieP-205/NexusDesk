@@ -9,9 +9,9 @@ RUN chmod +x mvnw && ./mvnw -B -q dependency:go-offline
 COPY src src
 RUN ./mvnw -B -q package -DskipTests && cp target/nexusdesk-*.jar /nexusdesk.jar
 # Unpack the jar into the application jar plus its libraries. Unlike the single nested jar, this
-# layout can be recorded in a class-data-sharing archive (below).
-RUN java -Djarmode=tools -jar /nexusdesk.jar extract --destination /extracted \
-    && mv /extracted/nexusdesk-*.jar /extracted/nexusdesk.jar
+# layout can be recorded in a class-data-sharing archive (below). The unpacked jar keeps the name
+# of the one it came from, so it is /extracted/nexusdesk.jar.
+RUN java -Djarmode=tools -jar /nexusdesk.jar extract --destination /extracted
 
 FROM eclipse-temurin:21-jre
 # The base image already has a user with ID 1000 (ubuntu), so the demo user gets its own.
