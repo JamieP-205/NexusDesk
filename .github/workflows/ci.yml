@@ -26,10 +26,32 @@ jobs:
           name: test-results-java-${{ matrix.java }}
           path: target/surefire-reports/
 
+  demo-image:
+    # Builds the image Render runs and starts it, so a Dockerfile that can't build never reaches Render.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build --file deploy/render/Dockerfile --tag nexusdesk-demo .
+      - name: The class-data-sharing archive can be used
+        # -Xshare:on makes Java stop instead of carrying on without the archive.
+        run: |
+          docker run --rm nexusdesk-demo java -Xshare:on -XX:SharedArchiveFile=/app/app.jsa \
+            -Dspring.context.exit=onRefresh -jar /app/nexusdesk.jar --spring.profiles.active=hosted
+      - name: The demo starts and serves its sign-in page
+        run: |
+          docker run --detach --name demo --publish 8080:8080 --env PORT=8080 nexusdesk-demo
+          for i in $(seq 1 60); do
+            if curl --silent --fail --output /dev/null http://localhost:8080/login; then echo "Up after about $((i * 2)) s"; exit 0; fi
+            sleep 2
+          done
+          docker logs demo
+          exit 1
+
   deploy-demo:
     # Redeploys the public browser demo on Render once the checks above pass on main.
     # Render can't watch this repo itself, so this asks it to deploy the commit that was just tested.
-    needs: test
+    needs: [test, demo-image]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
