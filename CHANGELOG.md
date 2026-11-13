@@ -4,6 +4,8 @@
 
 - Motion: buttons dip slightly when pressed, messages and ticket rows ease in (rows 30 ms apart), success messages give one soft pulse, and opened sections ease their contents in. All of it is off when the device asks for reduced motion.
 
+- Hosted demo: the Render image now unpacks the jar and records a class-data-sharing archive at build time, so a cold start loads Spring's classes from the archive instead of parsing them again. Measured on a simulated 0.1 CPU, the time to the first sign-in page fell from about 90 to 105 seconds to about 48 to 50 seconds. Behaviour is unchanged.
+
 ## 0.2.2 — 5 November 2026
 
 Made by Claude (Anthropic's AI assistant) in Claude Code at Jamie's request, after Jamie found the roles hard to tell apart: the demo gave no hint of what each account could do, and the main actions were in a form at the bottom of each ticket.
